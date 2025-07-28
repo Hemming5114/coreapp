@@ -4,6 +4,10 @@
         "name": "咕噜噜",
         "head": "user_head_1.webp",
         "lovesinger": "刘宪华",
+        "follow": 100,
+        "fans": 100,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "Trap",
         "list": [
             {
@@ -27,6 +31,10 @@
         "name": "火野喵oxo",
         "head": "user_head_2.webp",
         "lovesinger": "汪苏泷",
+        "follow": 67,
+        "fans": 89,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "后会无期",
         "list": [
             {
@@ -50,6 +58,10 @@
         "name": "纠结的ijie小姐",
         "head": "user_head_3.webp",
         "lovesinger": "梁静茹",
+        "follow": 34,
+        "fans": 156,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "情歌",
         "list": [
             {
@@ -88,6 +100,10 @@
         "name": "列列ii",
         "head": "user_head_4.webp",
         "lovesinger": "颜人中",
+        "follow": 78,
+        "fans": 45,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "晚安",
         "list": [
             {
@@ -109,6 +125,10 @@
         "name": "双下巴分你一半",
         "head": "user_head_5.webp",
         "lovesinger": "陶喆",
+        "follow": 23,
+        "fans": 234,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "寂寞的季节",
         "list": [
             {
@@ -133,6 +153,10 @@
         "name": "豚豚奶糖",
         "head": "user_head_6.webp",
         "lovesinger": "张杰",
+        "follow": 56,
+        "fans": 178,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "最美的太阳",
         "list": [
             {
@@ -172,6 +196,10 @@
         "name": "小狗凉茶好好喝",
         "head": "user_head_7.webp",
         "lovesinger": "许嵩",
+        "follow": 89,
+        "fans": 67,
+        "gender": "male",
+        "personality": "icon_e.webp",
         "lovesong": "素颜",
         "list": [
             {
@@ -195,6 +223,10 @@
         "name": "小美咯",
         "head": "user_head_8.webp",
         "lovesinger": "张靓颖",
+        "follow": 45,
+        "fans": 123,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "如果这就是爱情",
         "list": [
             {
@@ -218,6 +250,10 @@
         "name": "鱼丸粗面",
         "head": "user_head_9.webp",
         "lovesinger": "孙燕姿",
+        "follow": 12,
+        "fans": 89,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "绿光",
         "list": [
             {
@@ -241,6 +277,10 @@
         "name": "周周",
         "head": "user_head_10.webp",
         "lovesinger": "孙燕姿",
+        "follow": 67,
+        "fans": 145,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "天黑黑",
         "list": [
             {
@@ -263,6 +303,10 @@
         "name": "esther",
         "head": "user_head_11.webp",
         "lovesinger": "喻言",
+        "follow": 34,
+        "fans": 78,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "蔷薇之巅",
         "list": [
             {
@@ -287,6 +331,10 @@
         "name": "suey",
         "head": "user_head_12.webp",
         "lovesinger": "汪苏泷",
+        "follow": 89,
+        "fans": 234,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "不分手的恋爱",
         "list": [
             {
@@ -311,6 +359,10 @@
         "name": "池小小",
         "head": "user_head_13.webp",
         "lovesinger": "谢霆锋 ",
+        "follow": 23,
+        "fans": 56,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "因为爱所以爱",
         "list": [
             {
@@ -331,6 +383,10 @@
         "name": "喝奶茶长大的kiki.",
         "head": "user_head_14.webp",
         "lovesinger": "陈慧娴",
+        "follow": 45,
+        "fans": 167,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "飘雪",
         "list": [
             {
@@ -351,6 +407,10 @@
         "name": "每天吃七次薯条",
         "head": "user_head_15.webp",
         "lovesinger": "汪苏泷",
+        "follow": 78,
+        "fans": 123,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "who",
         "list": [
             {
@@ -371,6 +431,10 @@
         "name": "奶茶小仙女",
         "head": "user_head_16.webp",
         "lovesinger": "邓紫棋",
+        "follow": 56,
+        "fans": 89,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "句号",
         "list": [
             {
@@ -391,6 +455,10 @@
         "name": "泡泡的快乐星球",
         "head": "user_head_17.webp",
         "lovesinger": "陶喆",
+        "follow": 34,
+        "fans": 145,
+        "gender": "male",
+        "personality": "icon_e.webp",
         "lovesong": "爱，很简单",
         "list": [
             {
@@ -411,6 +479,10 @@
         "name": "双层猫猫汉堡堡",
         "head": "user_head_18.webp",
         "lovesinger": "周笔畅",
+        "follow": 67,
+        "fans": 78,
+        "gender": "male",
+        "personality": "icon_i.webp",
         "lovesong": "笔记",
         "list": [
             {
@@ -431,6 +503,10 @@
         "name": "苏小姐",
         "head": "user_head_19.webp",
         "lovesinger": "薛凯琪",
+        "follow": 89,
+        "fans": 167,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "苏州河",
         "list": [
             {
@@ -451,6 +527,10 @@
         "name": "我超爱学习的",
         "head": "user_head_20.webp",
         "lovesinger": "于文文",
+        "follow": 45,
+        "fans": 123,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "体面",
         "list": [
             {
@@ -471,6 +551,10 @@
         "name": "鱼籽蛋花汤",
         "head": "user_head_21.webp",
         "lovesinger": "胡夏",
+        "follow": 23,
+        "fans": 89,
+        "gender": "female",
+        "personality": "icon_e.webp",
         "lovesong": "那些年",
         "list": [
             {
@@ -491,6 +575,10 @@
         "name": "bebe~",
         "head": "user_head_22.webp",
         "lovesinger": "旅行团乐队",
+        "follow": 78,
+        "fans": 145,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "逝去的歌",
         "list": [
             {
@@ -511,6 +599,10 @@
         "name": "emo的小狐狸",
         "head": "user_head_23.webp",
         "lovesinger": "张靓颖",
+        "follow": 56,
+        "fans": 234,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "如果这就是爱情",
         "list": [
             {
@@ -531,6 +623,10 @@
         "name": "Mia-xiao",
         "head": "user_head_24.webp",
         "lovesinger": "刘宇宁",
+        "follow": 34,
+        "fans": 167,
+        "gender": "male",
+        "personality": "icon_e.webp",
         "lovesong": "讲真的",
         "list": [
             {
@@ -551,6 +647,10 @@
         "name": "suinyuyu",
         "head": "user_head_25.webp",
         "lovesinger": "旅行团乐队",
+        "follow": 67,
+        "fans": 89,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "逝去的歌",
         "list": [
             {
@@ -571,6 +671,10 @@
         "name": "sun",
         "head": "user_head_26.webp",
         "lovesinger": "陈奕迅",
+        "follow": 89,
+        "fans": 123,
+        "gender": "male",
+        "personality": "icon_e.webp",
         "lovesong": "背包",
         "list": [
             {
@@ -591,6 +695,10 @@
         "name": "Y.寒寒",
         "head": "user_head_27.webp",
         "lovesinger": "易烊千玺",
+        "follow": 45,
+        "fans": 178,
+        "gender": "female",
+        "personality": "icon_i.webp",
         "lovesong": "野花",
         "list": [
             {

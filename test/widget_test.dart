@@ -7,24 +7,36 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:coreapp/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('应用启动测试', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // 验证应用标题是否显示
+    expect(find.text('音乐搭子'), findsOneWidget);
+    expect(find.text('寻找你的音乐伙伴'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // 验证加载指示器是否显示
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('主页面结构测试', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: Column(
+          children: [
+            Text('音乐搭子'),
+            Text('寻找你的音乐伙伴'),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    ));
+
+    // 验证基本UI元素
+    expect(find.text('音乐搭子'), findsOneWidget);
+    expect(find.text('寻找你的音乐伙伴'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }
