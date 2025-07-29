@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import '../services/api_service.dart';
 import '../services/keychain_service.dart';
 import '../models/user_model.dart';
+import 'webview_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,8 +16,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   // H5页面链接（稍后替换为实际链接）
-  static const String _privacyPolicyUrl = 'https://example.com/privacy-policy';
-  static const String _userAgreementUrl = 'https://example.com/user-agreement';
+  static const String _privacyPolicyUrl = 'https://www.baidu.com';
+  static const String _userAgreementUrl = 'https://www.baidu.com';
   
   bool _isAgreed = false;
   bool _isLoading = false;
@@ -145,47 +145,29 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   // 打开隐私政策
-  Future<void> _openPrivacyPolicy() async {
-    try {
-      final Uri url = Uri.parse(_privacyPolicyUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开隐私政策页面')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开隐私政策页面失败')),
-        );
-      }
-    }
+  void _openPrivacyPolicy() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WebViewScreen(
+          url: _privacyPolicyUrl,
+          title: '隐私授权协议',
+        ),
+      ),
+    );
   }
 
   // 打开用户协议
-  Future<void> _openUserAgreement() async {
-    try {
-      final Uri url = Uri.parse(_userAgreementUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开用户协议页面')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开用户协议页面失败')),
-        );
-      }
-    }
+  void _openUserAgreement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WebViewScreen(
+          url: _userAgreementUrl,
+          title: '用户协议',
+        ),
+      ),
+    );
   }
 
   void _showErrorDialog(String message) {
@@ -316,9 +298,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       color: Color(0xFF73C5FF),
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () async {
+                                      ..onTap = () {
                                         if (_isLoading) return; // loading时禁用交互
-                                        await _openUserAgreement();
+                                        _openUserAgreement();
                                       },
                                   ),
                                   const TextSpan(text: '和'),
@@ -328,9 +310,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       color: Color(0xFF73C5FF),
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () async {
+                                      ..onTap = () {
                                         if (_isLoading) return; // loading时禁用交互
-                                        await _openPrivacyPolicy();
+                                        _openPrivacyPolicy();
                                       },
                                   ),
                                 ],

@@ -30,19 +30,33 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>qcloud.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSRequiresCertificateTransparency</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>应用需要位置权限来为您提供更好的服务体验</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>应用需要位置权限来为您提供更好的服务体验</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>应用需要位置权限来为您提供更好的服务体验</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>应用需要保存图片到相册</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>应用需要访问相册来选择和保存图片</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>您的设备标识符信息将用于保障您的账户交易安全，并推送个性化广告服务</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

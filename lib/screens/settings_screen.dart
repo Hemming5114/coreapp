@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'blocked_users_screen.dart';
 import 'report_history_screen.dart';
 import 'about_screen.dart';
 import 'help_center_screen.dart';
 import 'feedback_screen.dart';
 import 'following_screen.dart';
+import 'webview_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,51 +18,33 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   // H5页面链接（稍后替换为实际链接）
-  static const String _privacyPolicyUrl = 'https://example.com/privacy-policy';
-  static const String _userAgreementUrl = 'https://example.com/user-agreement';
+  static const String _privacyPolicyUrl = 'https://www.baidu.com';
+  static const String _userAgreementUrl = 'https://www.baidu.com';
 
   // 打开隐私政策
-  Future<void> _openPrivacyPolicy() async {
-    try {
-      final Uri url = Uri.parse(_privacyPolicyUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开隐私政策页面')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开隐私政策页面失败')),
-        );
-      }
-    }
+  void _openPrivacyPolicy() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WebViewScreen(
+          url: _privacyPolicyUrl,
+          title: '隐私政策',
+        ),
+      ),
+    );
   }
 
   // 打开用户协议
-  Future<void> _openUserAgreement() async {
-    try {
-      final Uri url = Uri.parse(_userAgreementUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开用户协议页面')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开用户协议页面失败')),
-        );
-      }
-    }
+  void _openUserAgreement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WebViewScreen(
+          url: _userAgreementUrl,
+          title: '用户协议',
+        ),
+      ),
+    );
   }
 
   @override
@@ -180,16 +162,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.privacy_tip_outlined,
                 title: '隐私政策',
                 subtitle: '了解隐私保护',
-                onTap: () async {
-                  await _openPrivacyPolicy();
+                onTap: () {
+                  _openPrivacyPolicy();
                 },
               ),
               _buildSettingItem(
                 icon: Icons.description_outlined,
                 title: '用户协议',
                 subtitle: '服务条款和协议',
-                onTap: () async {
-                  await _openUserAgreement();
+                onTap: () {
+                  _openUserAgreement();
                 },
               ),
             ],
