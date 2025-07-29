@@ -101,7 +101,7 @@ jobs:
         env:
           IPA_PATH: "build/ios/ipa/秒遇.ipa"
           APPLE_ID: "liangyuyi@wildtrekhk.shop"
-          APP_SPECIFIC_PASSWORD: "yylp-wmai-zbqn-lmht"
+          APP_SPECIFIC_PASSWORD: "zniu-ypie-iypn-rtnf"
         run: |
           xcrun altool --upload-app -f "$IPA_PATH" \
             -t ios \
