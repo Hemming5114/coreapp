@@ -292,37 +292,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               color: Colors.black,
                             ),
                           ),
-                          if (personality != null && personality.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            Image.asset(
-                              'assets/images/appicon/$personality',
-                              width: 36,
-                              height: 20,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const SizedBox(width: 36, height: 20);
-                              },
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
+                                              if (personality != null && personality.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Image.asset(
+                          'assets/images/appicon/$personality',
+                          width: 36,
+                          height: 20,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const SizedBox(width: 36, height: 20);
+                          },
+                        ),
+                      ],
+                      ],
+                    ),
+                  ],
+                  
                 ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // 音乐偏好
-            UserMusicPreferencesWidget(
-              loveSinger: loveSinger,
-              loveSong: loveSong,
-              isOwn: false,
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // 音乐偏好
+          UserMusicPreferencesWidget(
+            loveSinger: loveSinger,
+            loveSong: loveSong,
+            isOwn: false,
+          ),
+        ],
       ),
     );
+  }
   }
 
   Widget _buildMessageItem(Map<String, dynamic> message) {
@@ -484,4 +485,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return '${messageTime.year}-${messageTime.month.toString().padLeft(2, '0')}-${messageTime.day.toString().padLeft(2, '0')} ${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}';
     }
   }
+
+
 } 

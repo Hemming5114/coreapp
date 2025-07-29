@@ -3,6 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../services/chat_service.dart';
 import '../services/block_service.dart';
 import 'chat_detail_screen.dart';
+import 'dart:async';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -14,6 +15,8 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _chats = [];
   bool _isLoading = true;
+  bool _hasInitialized = false;
+  StreamSubscription<BlockEvent>? _blockEventSubscription;
 
   @override
   bool get wantKeepAlive => true;
@@ -23,11 +26,13 @@ class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObse
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadChats();
+    _listenToBlockEvents();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _blockEventSubscription?.cancel();
     super.dispose();
   }
 
@@ -36,7 +41,6 @@ class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObse
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       // 应用重新获得焦点时刷新数据
-      debugPrint('ChatListScreen: 应用恢复，开始刷新数据');
       _loadChats();
     }
   }
@@ -44,40 +48,67 @@ class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObse
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 只在首次加载时刷新，避免过度刷新
-    if (_chats.isEmpty && _isLoading) {
+    // 如果已经初始化过，说明是从其他页面返回，需要刷新数据
+    if (_hasInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          debugPrint('ChatListScreen: 首次加载数据');
           _loadChats();
         }
       });
     }
   }
 
-  // 公共刷新方法，供外部调用
-  void refresh() {
-    _loadChats();
+  // 监听拉黑事件
+  void _listenToBlockEvents() {
+    _blockEventSubscription = BlockService.blockEventStream.listen((event) {
+      if (mounted) {
+        _handleBlockEvent(event);
+      }
+    });
   }
 
-  // 手动刷新方法，供外部调用或用户操作触发
+  // 处理拉黑事件
+  void _handleBlockEvent(BlockEvent event) {
+    setState(() {
+      if (event.type == BlockEventType.blocked) {
+        // 立即从列表中移除被拉黑用户的聊天记录
+        _chats.removeWhere((chat) {
+          final userId = chat['userId']?.toString() ?? '';
+          return userId == event.userId;
+        });
+      } else if (event.type == BlockEventType.unblocked) {
+        // 解除拉黑时重新加载数据以还原被解除拉黑用户的聊天记录
+        _loadChats();
+      }
+    });
+  }
+
+  // Public refresh method, for external calls or user-triggered refresh
   void refreshData() {
-    debugPrint('ChatListScreen: 手动刷新数据');
     _loadChats();
   }
 
   Future<void> _loadChats() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final chats = await ChatService.getChats();
-      final filteredChats = await BlockService.filterBlockedUsers(chats);
+      List<Map<String, dynamic>> allChats = await ChatService.getChats();
+      
+      // 拉黑过滤
+      final filtered = await BlockService.filterBlockedUsers(allChats);
+      
       if (mounted) {
         setState(() {
-          _chats = filteredChats;
+          _chats = filtered;
           _isLoading = false;
+          _hasInitialized = true;
         });
       }
     } catch (e) {
-      debugPrint('加载聊天列表失败: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -110,24 +141,26 @@ class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObse
           Positioned(
             top: safeTop,
             left: 16,
-            child: SizedBox(
+            child: Container(
+              width: 44,
               height: 44,
               child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Container(
-                      width: 56,
-                      height: 8,
-                      color: const Color(0xFFFFE44D),
-                    ),
+                  // 背景图片
+                  Image.asset(
+                    'assets/images/appicon/icon_moment_tab.webp',
+                    width: 44,
+                    height: 24,
+                    fit: BoxFit.contain,
                   ),
+                  // 文字
                   const Text(
                     '消息',
                     style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF171717),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

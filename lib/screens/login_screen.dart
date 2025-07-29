@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import '../services/api_service.dart';
 import '../services/keychain_service.dart';
@@ -14,6 +15,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+  // H5页面链接（稍后替换为实际链接）
+  static const String _privacyPolicyUrl = 'https://example.com/privacy-policy';
+  static const String _userAgreementUrl = 'https://example.com/user-agreement';
+  
   bool _isAgreed = false;
   bool _isLoading = false;
   late AnimationController _shakeController;
@@ -137,6 +142,50 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       followCount: random.nextInt(10) + 1, // 1-10关注
       fansCount: random.nextInt(1000) + 100, // 100-1100粉丝
     );
+  }
+
+  // 打开隐私政策
+  Future<void> _openPrivacyPolicy() async {
+    try {
+      final Uri url = Uri.parse(_privacyPolicyUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('无法打开隐私政策页面')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('打开隐私政策页面失败')),
+        );
+      }
+    }
+  }
+
+  // 打开用户协议
+  Future<void> _openUserAgreement() async {
+    try {
+      final Uri url = Uri.parse(_userAgreementUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('无法打开用户协议页面')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('打开用户协议页面失败')),
+        );
+      }
+    }
   }
 
   void _showErrorDialog(String message) {
@@ -267,10 +316,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       color: Color(0xFF73C5FF),
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
+                                      ..onTap = () async {
                                         if (_isLoading) return; // loading时禁用交互
-                                        // 打开用户协议
-                                        debugPrint('打开用户协议');
+                                        await _openUserAgreement();
                                       },
                                   ),
                                   const TextSpan(text: '和'),
@@ -280,10 +328,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       color: Color(0xFF73C5FF),
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
+                                      ..onTap = () async {
                                         if (_isLoading) return; // loading时禁用交互
-                                        // 打开隐私协议
-                                        debugPrint('打开隐私协议');
+                                        await _openPrivacyPolicy();
                                       },
                                   ),
                                 ],

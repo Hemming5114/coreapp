@@ -13,69 +13,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final GlobalKey _plazaKey = GlobalKey();
-  final GlobalKey _feedKey = GlobalKey();
-  final GlobalKey _chatKey = GlobalKey();
 
-  late final List<Widget> _pages = [
-    PlazaScreen(key: _plazaKey),
-    FeedScreen(key: _feedKey),
+  final List<Widget> _pages = [
+    const PlazaScreen(),
+    const FeedScreen(),
     const PlaceholderPage(), // 发布按钮不切换页面
-    ChatListScreen(key: _chatKey),
+    const ChatListScreen(),
     const ProfilePage(),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      // 应用重新获得焦点时刷新当前页面
-      debugPrint('HomeScreen: 应用恢复，刷新当前页面: $_currentIndex');
-      _refreshCurrentPage();
-    }
-  }
-
-  // 刷新当前页面
-  void _refreshCurrentPage() {
-    try {
-      switch (_currentIndex) {
-        case 0: // 广场
-          final plazaState = _plazaKey.currentState;
-          if (plazaState != null && plazaState is State) {
-            (plazaState as dynamic).refreshData?.call();
-          }
-          break;
-        case 1: // 动态
-          final feedState = _feedKey.currentState;
-          if (feedState != null && feedState is State) {
-            (feedState as dynamic).refreshData?.call();
-          }
-          break;
-        case 3: // 消息
-          final chatState = _chatKey.currentState;
-          if (chatState != null && chatState is State) {
-            (chatState as dynamic).refreshData?.call();
-          }
-          break;
-      }
-    } catch (e) {
-      debugPrint('刷新页面失败: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         text,
         style: TextStyle(
           fontSize: 16, // 16pt
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          fontWeight: FontWeight.w600, // Medium
           color: isSelected ? const Color(0xFF171717) : const Color(0xFF9598AC),
         ),
       ),

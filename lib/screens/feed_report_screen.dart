@@ -41,10 +41,23 @@ class _FeedReportScreenState extends State<FeedReportScreen> {
           : selectedReasons;
       
       // 创建举报记录
+      String reportedTitle;
+      String reportedUser;
+      
+      if (widget.reportType == 'user') {
+        // 举报用户：标题显示用户昵称，用户字段也是用户昵称
+        reportedTitle = widget.feed['name'] ?? widget.feed['userName'] ?? '';
+        reportedUser = widget.feed['name'] ?? widget.feed['userName'] ?? '';
+      } else {
+        // 举报广场/动态：标题显示内容标题，用户显示发布者昵称
+        reportedTitle = widget.feed['title'] ?? '';
+        reportedUser = widget.feed['userName'] ?? widget.feed['name'] ?? '';
+      }
+      
       final report = ReportModel(
         id: ReportService.generateReportId(),
-        reportedTitle: widget.feed['title'] ?? '',
-        reportedUser: widget.feed['userName'] ?? '',
+        reportedTitle: reportedTitle,
+        reportedUser: reportedUser,
         reportTime: DateTime.now(),
         reportReason: reportReason,
         reportType: widget.reportType,

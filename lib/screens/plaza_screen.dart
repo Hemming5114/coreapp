@@ -8,6 +8,8 @@ import '../services/api_service.dart';
 import '../services/chat_service.dart';
 import '../services/block_service.dart';
 import 'chat_detail_screen.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'dart:async';
 
 class PlazaScreen extends StatefulWidget {
   const PlazaScreen({super.key});
@@ -18,8 +20,9 @@ class PlazaScreen extends StatefulWidget {
 
 class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _events = [];
-  bool _isLoading = false;
-  bool _isFirstLoad = true;
+  bool _isLoading = true;
+  bool _hasInitialized = false;
+  StreamSubscription<BlockEvent>? _blockEventSubscription;
   final List<Color> _cardColors = [
     const Color(0xFFFFC39E), // 浅橙色
     const Color(0xFFFFE688), // 浅黄色
@@ -36,11 +39,13 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadEvents();
+    _listenToBlockEvents();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _blockEventSubscription?.cancel();
     super.dispose();
   }
 
@@ -57,8 +62,8 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 只在首次加载时刷新，避免过度刷新
-    if (_events.isEmpty) {
+    // 如果已经初始化过，说明是从其他页面返回，需要刷新数据
+    if (_hasInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           debugPrint('PlazaScreen: 首次加载数据');
@@ -66,6 +71,34 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
         }
       });
     }
+  }
+
+  // 监听拉黑事件
+  void _listenToBlockEvents() {
+    _blockEventSubscription = BlockService.blockEventStream.listen((event) {
+      if (mounted) {
+        _handleBlockEvent(event);
+      }
+    });
+  }
+
+  // 处理拉黑事件
+  void _handleBlockEvent(BlockEvent event) {
+    setState(() {
+      if (event.type == BlockEventType.blocked) {
+        // 立即从列表中移除被拉黑用户的数据
+        _events.removeWhere((item) {
+          final userId = item['userId']?.toString() ?? 
+                        item['id']?.toString() ?? 
+                        item['userData']?['id']?.toString() ?? 
+                        item['user']?['id']?.toString() ?? '';
+          return userId == event.userId;
+        });
+      } else if (event.type == BlockEventType.unblocked) {
+        // 解除拉黑时重新加载数据以还原被解除拉黑用户的内容
+        _loadEvents();
+      }
+    });
   }
 
   // 公共刷新方法，供外部调用
@@ -83,7 +116,7 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
   Future<void> _handleJoinEvent(Map<String, dynamic> event) async {
     try {
       // 获取活动发布者信息
-      final userData = Map<String, dynamic>.from(event['user'] ?? {});
+      final userData = Map<String, dynamic>.from(event['userData'] ?? {});
       final String userId = userData['id']?.toString() ?? '';
       
       if (userId.isEmpty) {
@@ -188,71 +221,50 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
   }
 
   Future<void> _loadEvents() async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    if (!mounted) return;
     
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      // 读取JSON文件
       final String jsonString = await rootBundle.loadString('assets/data/coredata.json');
       final List<dynamic> jsonData = json.decode(jsonString);
+      List<Map<String, dynamic>> type2List = [];
       
-      // 提取type为2的数据
-      List<Map<String, dynamic>> type2Events = [];
       for (var user in jsonData) {
         if (user['list'] != null) {
           for (var item in user['list']) {
             if (item['type'] == '2') {
-              type2Events.add({
-                ...item,
+              final eventItem = Map<String, dynamic>.from({
+                ...Map<String, dynamic>.from(item),
                 'userName': user['name'],
                 'userHead': user['head'],
                 'userId': user['id'],
-                'userData': user, // 保存完整的用户数据
+                'userData': Map<String, dynamic>.from(user), // 保存完整的用户数据
               });
+              
+              type2List.add(eventItem);
             }
           }
         }
       }
       
-      // 使用当前时间作为随机种子，确保每次刷新都有不同的随机效果
-      final random = Random(DateTime.now().millisecondsSinceEpoch);
-      type2Events.shuffle(random);
-      final selectedEvents = type2Events.take(6).toList();
-      
-      // 再次打乱选中的事件顺序，确保每次都是随机展示
-      selectedEvents.shuffle(random);
+      // 随机打乱
+      type2List.shuffle(Random());
+      final selected = type2List.take(20).toList();
       
       // 拉黑过滤
-      final filteredEvents = await BlockService.filterBlockedUsers(selectedEvents);
+      final filtered = await BlockService.filterBlockedUsers(selected);
+      
       if (mounted) {
         setState(() {
-          _events = filteredEvents;
+          _events = filtered;
           _isLoading = false;
+          _hasInitialized = true;
         });
-        
-        // 如果是刷新操作（非首次加载），显示提示
-        if (!_isFirstLoad) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('现场数据已刷新'),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-        }
-        
-        // 标记首次加载完成
-        _isFirstLoad = false;
       }
     } catch (e) {
-      debugPrint('加载事件数据失败: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

@@ -6,6 +6,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../services/block_service.dart';
 import 'feed_detail_screen.dart';
 import 'user_detail_screen.dart';
+import 'dart:async';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({Key? key}) : super(key: key);
@@ -16,6 +17,9 @@ class FeedScreen extends StatefulWidget {
 
 class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _feeds = [];
+  bool _isLoading = true;
+  bool _hasInitialized = false;
+  StreamSubscription<BlockEvent>? _blockEventSubscription;
 
   @override
   bool get wantKeepAlive => true;
@@ -25,11 +29,13 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadFeeds();
+    _listenToBlockEvents();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _blockEventSubscription?.cancel();
     super.dispose();
   }
 
@@ -38,7 +44,6 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       // 应用重新获得焦点时刷新数据
-      debugPrint('FeedScreen: 应用恢复，开始刷新数据');
       _loadFeeds();
     }
   }
@@ -46,64 +51,99 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 只在首次加载时刷新，避免过度刷新
-    if (_feeds.isEmpty) {
+    // 如果已经初始化过，说明是从其他页面返回，需要刷新数据
+    if (_hasInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          debugPrint('FeedScreen: 首次加载数据');
           _loadFeeds();
         }
       });
     }
   }
 
+  // 监听拉黑事件
+  void _listenToBlockEvents() {
+    _blockEventSubscription = BlockService.blockEventStream.listen((event) {
+      if (mounted) {
+        _handleBlockEvent(event);
+      }
+    });
+  }
+
+  // 处理拉黑事件
+  void _handleBlockEvent(BlockEvent event) {
+    setState(() {
+      if (event.type == BlockEventType.blocked) {
+        // 立即从列表中移除被拉黑用户的数据
+        _feeds.removeWhere((item) {
+          final userId = item['userId']?.toString() ?? 
+                        item['id']?.toString() ?? 
+                        item['userData']?['id']?.toString() ?? 
+                        item['user']?['id']?.toString() ?? '';
+          return userId == event.userId;
+        });
+      } else if (event.type == BlockEventType.unblocked) {
+        // 解除拉黑时重新加载数据以还原被解除拉黑用户的内容
+        _loadFeeds();
+      }
+    });
+  }
+
   // 手动刷新方法，供外部调用或用户操作触发
   void refreshData() {
-    debugPrint('FeedScreen: 手动刷新数据');
     _loadFeeds();
   }
 
   Future<void> _loadFeeds() async {
     if (!mounted) return;
     
-    debugPrint('FeedScreen: 开始加载数据');
-    final String jsonString = await rootBundle.loadString('assets/data/coredata.json');
-    final List<dynamic> jsonData = json.decode(jsonString);
-    List<Map<String, dynamic>> type1List = [];
-    for (var user in jsonData) {
-      if (user['list'] != null) {
-        for (var item in user['list']) {
-          if (item['type'] == '1') {
-            final feedItem = Map<String, dynamic>.from({
-              ...Map<String, dynamic>.from(item),
-              'userName': user['name'],
-              'userHead': user['head'],
-              'userId': user['id'],
-              'userData': Map<String, dynamic>.from(user), // 保存完整的用户数据
-              'likes': Random().nextInt(100) + 150, // 随机点赞数
-            });
-            
-            debugPrint('FeedScreen: 构建数据项 - userId: ${user['id']}, userName: ${user['name']}, feedTitle: ${item['title']}');
-            type1List.add(feedItem);
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final String jsonString = await rootBundle.loadString('assets/data/coredata.json');
+      final List<dynamic> jsonData = json.decode(jsonString);
+      List<Map<String, dynamic>> type1List = [];
+      
+      for (var user in jsonData) {
+        if (user['list'] != null) {
+          for (var item in user['list']) {
+            if (item['type'] == '1') {
+              final feedItem = Map<String, dynamic>.from({
+                ...Map<String, dynamic>.from(item),
+                'userName': user['name'],
+                'userHead': user['head'],
+                'userId': user['id'],
+                'userData': Map<String, dynamic>.from(user), // 保存完整的用户数据
+                'likes': Random().nextInt(100) + 150, // 随机点赞数
+              });
+              
+              type1List.add(feedItem);
+            }
           }
         }
       }
-    }
-    type1List.shuffle(Random());
-    final selected = type1List.take(10).toList();
-    selected.sort((a, b) => DateTime.parse(b['time']).compareTo(DateTime.parse(a['time'])));
-    
-    debugPrint('FeedScreen: 原始数据数量: ${selected.length}');
-    
-    // 拉黑过滤
-    final filtered = await BlockService.filterBlockedUsers(selected);
-    
-    debugPrint('FeedScreen: 过滤后数据数量: ${filtered.length}');
-    
-    if (mounted) {
-      setState(() {
-        _feeds = filtered;
-      });
+      
+      // 随机打乱所有动态数据
+      type1List.shuffle(Random());
+      
+      // 拉黑过滤
+      final filtered = await BlockService.filterBlockedUsers(type1List);
+      
+      if (mounted) {
+        setState(() {
+          _feeds = filtered;
+          _isLoading = false;
+          _hasInitialized = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -131,24 +171,26 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
           Positioned(
             top: safeTop,
             left: 16,
-            child: SizedBox(
+            child: Container(
+              width: 88,
               height: 44,
               child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Container(
-                      width: 56,
-                      height: 8,
-                      color: const Color(0xFFFFE44D),
-                    ),
+                  // 背景图片
+                  Image.asset(
+                    'assets/images/appicon/icon_moment_tab.webp',
+                    width: 88,
+                    height: 24,
+                    fit: BoxFit.contain,
                   ),
+                  // 文字
                   const Text(
                     '在现场',
                     style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF171717),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

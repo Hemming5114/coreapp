@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/block_service.dart';
+import 'user_detail_screen.dart';
+import 'dart:async';
 
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});
@@ -11,28 +13,63 @@ class BlockedUsersScreen extends StatefulWidget {
 class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   List<Map<String, dynamic>> _blockedUsers = [];
   bool _isLoading = true;
+  StreamSubscription<BlockEvent>? _blockEventSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadBlockedUsers();
+    _listenToBlockEvents();
+  }
+
+  @override
+  void dispose() {
+    _blockEventSubscription?.cancel();
+    super.dispose();
+  }
+
+  // 监听拉黑事件
+  void _listenToBlockEvents() {
+    _blockEventSubscription = BlockService.blockEventStream.listen((event) {
+      if (mounted) {
+        _handleBlockEvent(event);
+      }
+    });
+  }
+
+  // 处理拉黑事件
+  void _handleBlockEvent(BlockEvent event) {
+    setState(() {
+      if (event.type == BlockEventType.blocked) {
+        // 有新用户被拉黑，添加到列表
+        final userId = event.userId;
+        final exists = _blockedUsers.any((user) => user['id']?.toString() == userId);
+        if (!exists) {
+          _blockedUsers.add(event.userData);
+        }
+      } else if (event.type == BlockEventType.unblocked) {
+        // 用户被解除拉黑，从列表中移除
+        _blockedUsers.removeWhere((user) => user['id']?.toString() == event.userId);
+      }
+    });
   }
 
   Future<void> _loadBlockedUsers() async {
-    setState(() {
-      _isLoading = true;
-    });
     try {
-      final blockedUsers = await BlockService.getBlockedUsers();
-      setState(() {
-        _blockedUsers = blockedUsers;
-        _isLoading = false;
-      });
+      final users = await BlockService.getBlockedUsers();
+      if (mounted) {
+        setState(() {
+          _blockedUsers = users;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      debugPrint('加载拉黑用户失败: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint('加载拉黑用户列表失败: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -56,14 +93,12 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         );
       },
     );
-    
+
     if (confirmed == true) {
       try {
         final success = await BlockService.unblockUser(userId);
+        // 移除手动setState，让事件监听机制自动处理UI更新
         if (success) {
-          setState(() {
-            _blockedUsers.removeWhere((user) => user['id']?.toString() == userId);
-          });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

@@ -280,9 +280,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   ),
                 ],
               ),
-              child: ClipOval(
-                child: _buildAvatarWidget(size: 90),
-              ),
+              child: _buildAvatarWidget(size: 90),
             ),
           ),
           
@@ -924,32 +922,36 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data != null) {
             return Stack(
+              clipBehavior: Clip.none, // 允许子组件超出边界
               children: [
-                Image.file(
-                  snapshot.data!,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    // 如果自定义头像加载失败，显示原始头像
-                    return _buildOriginalAvatar(size);
-                  },
+                ClipOval(
+                  child: Image.file(
+                    snapshot.data!,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // 如果自定义头像加载失败，显示原始头像
+                      return _buildOriginalAvatar(size);
+                    },
+                  ),
                 ),
                 // 审核中标识
                 Positioned(
-                  bottom: 0,
-                  right: 0,
+                  top: -2,
+                  right: -2,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.orange,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
                       '审核中',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 8,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -982,14 +984,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       return _buildDefaultAvatar(size);
     }
     
-    return Image.asset(
-      'assets/images/head/$originalHead',
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return _buildDefaultAvatar(size);
-      },
+    return ClipOval(
+      child: Image.asset(
+        'assets/images/head/$originalHead',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildDefaultAvatar(size);
+        },
+      ),
     );
   }
 
@@ -1011,14 +1015,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   // 构建默认头像
   Widget _buildDefaultAvatar(double size) {
-    return Container(
-      width: size,
-      height: size,
-      color: Colors.grey[300],
-      child: Icon(
-        Icons.person,
-        size: size * 0.5,
-        color: Colors.grey[600],
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: Colors.grey[300],
+        child: Icon(
+          Icons.person,
+          size: size * 0.5,
+          color: Colors.grey[600],
+        ),
       ),
     );
   }

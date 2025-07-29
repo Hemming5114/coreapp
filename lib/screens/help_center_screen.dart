@@ -15,7 +15,6 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     },
     {
       'title': '如何找搭子？',
-      'title': '如何找搭子？',
       'content': '在首页点击"+"按钮，选择"找搭子"，填写演出信息、主题、时间、地点等，上传封面图片后发布。',
     },
     {
@@ -32,11 +31,15 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     },
     {
       'title': '如何修改个人信息？',
-      'content': '在"我的"页面点击右上角编辑按钮，或在设置页面的"个人信息"中进行修改。',
+      'content': '在"我的"页面点击右上角编辑按钮，可以修改头像、昵称、性格类型等个人信息。',
     },
     {
-      'title': '如何退出登录？',
-      'content': '在设置页面底部点击"退出登录"按钮，确认后即可退出当前账号。',
+      'title': '什么是互动设置？',
+      'content': '在设置页面可以管理关注列表、拉黑用户、查看举报历史等社交功能。',
+    },
+    {
+      'title': '如何使用聊天功能？',
+      'content': '点击"立即结伴"或"聊一下"按钮即可开始聊天，支持文字消息和表情互动。',
     },
   ];
 
@@ -61,124 +64,24 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
+          // 常见问题标题
+          const Text(
+            '常见问题',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          
           const SizedBox(height: 16),
-          
-          // 搜索框
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: '搜索帮助内容...',
-                hintStyle: const TextStyle(
-                  color: Color(0xFF999999),
-                  fontSize: 14,
-                ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Color(0xFF999999),
-                  size: 20,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // 常见问题
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              '常见问题',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 12),
           
           // 问题列表
           ..._helpItems.map((item) => _buildHelpItem(item)).toList(),
           
-          const SizedBox(height: 32),
-          
-          // 联系客服
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFE44D).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.support_agent,
-                  color: Color(0xFFFFE44D),
-                  size: 20,
-                ),
-              ),
-              title: const Text(
-                '联系客服',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
-              ),
-              subtitle: const Text(
-                '在线客服为您解答问题',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF666666),
-                ),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Color(0xFF999999),
-              ),
-              onTap: () {
-                // TODO: 跳转到客服页面
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('客服功能开发中...')),
-                );
-              },
-            ),
-          ),
-          
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -186,7 +89,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
   Widget _buildHelpItem(Map<String, dynamic> item) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -199,6 +102,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         ],
       ),
       child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         title: Text(
           item['title'],
           style: const TextStyle(
@@ -208,15 +113,12 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
           ),
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Text(
-              item['content'],
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF666666),
-                height: 1.5,
-              ),
+          Text(
+            item['content'],
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF666666),
+              height: 1.5,
             ),
           ),
         ],

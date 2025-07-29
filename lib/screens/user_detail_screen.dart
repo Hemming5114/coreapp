@@ -144,8 +144,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> with SingleTickerPr
                 backgroundColor: Colors.orange,
               ),
             );
-            // 拉黑后返回上一页
-            Navigator.of(context).pop();
+            // 拉黑后返回到一级页面（聊天列表页面）
+            Navigator.of(context).popUntil((route) => route.isFirst);
           }
         } else {
           if (mounted) {

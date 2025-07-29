@@ -44,11 +44,25 @@ class AboutScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE44D),
-                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFFE44D),
+                          const Color(0xFFFFD700),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFE44D).withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Icon(
-                      Icons.favorite,
+                      Icons.music_note,
                       size: 40,
                       color: Colors.white,
                     ),
@@ -57,7 +71,7 @@ class AboutScreen extends StatelessWidget {
                   const Text(
                     'CoreApp',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
@@ -78,7 +92,7 @@ class AboutScreen extends StatelessWidget {
             
             // 应用介绍
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -90,111 +104,69 @@ class AboutScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '应用介绍',
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.favorite,
+                        color: Color(0xFFFFE44D),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '应用介绍',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '🎵 用音乐连接世界，用心灵触碰彼此\n\nCoreApp 不只是一个社交应用，更是属于音乐爱好者的专属空间。在这里，每一次心跳都与节拍同步，每一段旋律都能找到共鸣的灵魂。\n\n✨ 在现场遇见同频的人\n🎶 用动态记录音乐时光\n💬 让聊天充满音乐的温度\n🤝 寻找一起看演出的搭子\n\n我们相信，最美好的相遇都始于共同的热爱。在 CoreApp，让音乐成为你们相识的开始，让现场成为友谊的见证。',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      fontSize: 15,
+                      color: Color(0xFF333333),
+                      height: 1.6,
                     ),
                   ),
-                  SizedBox(height: 12),
-                  Text(
-                    'CoreApp是一个专注于社交互动的移动应用，致力于为用户提供安全、有趣的社交体验。我们相信每个人都有权利在安全的环境中表达自己，结识新朋友。',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                      height: 1.5,
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE44D).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: Color(0xFFFFE44D),
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '让每一个音乐瞬间都不再孤单',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF666666),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
             
-            const SizedBox(height: 16),
-            
-            // 开发团队
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '开发团队',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    '我们是一支充满激情的开发团队，专注于创造优秀的用户体验。如果您有任何建议或反馈，欢迎联系我们。',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // 联系方式
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '联系我们',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    '邮箱：support@coreapp.com\n微信：CoreApp官方\nQQ群：123456789',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
         ),
       ),
