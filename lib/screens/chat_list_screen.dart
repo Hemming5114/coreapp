@@ -153,7 +153,7 @@ class _ChatListScreenState extends State<ChatListScreen> with WidgetsBindingObse
                     width: 44,
                     height: 24,
                     fit: BoxFit.contain,
-                  ),
+                    ),
                   // 文字
                   const Text(
                     '消息',

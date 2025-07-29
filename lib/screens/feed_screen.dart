@@ -183,7 +183,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
                     width: 88,
                     height: 24,
                     fit: BoxFit.contain,
-                  ),
+                    ),
                   // 文字
                   const Text(
                     '在现场',

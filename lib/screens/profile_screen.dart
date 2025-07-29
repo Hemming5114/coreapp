@@ -280,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                   ),
                 ],
               ),
-              child: _buildAvatarWidget(size: 90),
+                child: _buildAvatarWidget(size: 90),
             ),
           ),
           
@@ -926,14 +926,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               children: [
                 ClipOval(
                   child: Image.file(
-                    snapshot.data!,
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      // 如果自定义头像加载失败，显示原始头像
-                      return _buildOriginalAvatar(size);
-                    },
+                  snapshot.data!,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // 如果自定义头像加载失败，显示原始头像
+                    return _buildOriginalAvatar(size);
+                  },
                   ),
                 ),
                 // 审核中标识
@@ -986,13 +986,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     
     return ClipOval(
       child: Image.asset(
-        'assets/images/head/$originalHead',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildDefaultAvatar(size);
-        },
+      'assets/images/head/$originalHead',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildDefaultAvatar(size);
+      },
       ),
     );
   }
@@ -1017,13 +1017,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   Widget _buildDefaultAvatar(double size) {
     return ClipOval(
       child: Container(
-        width: size,
-        height: size,
-        color: Colors.grey[300],
-        child: Icon(
-          Icons.person,
-          size: size * 0.5,
-          color: Colors.grey[600],
+      width: size,
+      height: size,
+      color: Colors.grey[300],
+      child: Icon(
+        Icons.person,
+        size: size * 0.5,
+        color: Colors.grey[600],
         ),
       ),
     );

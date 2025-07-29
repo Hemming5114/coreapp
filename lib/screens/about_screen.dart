@@ -44,14 +44,6 @@ class AboutScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFFFFE44D),
-                          const Color(0xFFFFD700),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -61,15 +53,42 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.music_note,
-                      size: 40,
-                      color: Colors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/appicon/icon.png',
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // 如果图片加载失败，显示默认图标
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFFFFE44D),
+                                  const Color(0xFFFFD700),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.music_note,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'CoreApp',
+                    '秒遇',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -127,7 +146,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    '🎵 用音乐连接世界，用心灵触碰彼此\n\nCoreApp 不只是一个社交应用，更是属于音乐爱好者的专属空间。在这里，每一次心跳都与节拍同步，每一段旋律都能找到共鸣的灵魂。\n\n✨ 在现场遇见同频的人\n🎶 用动态记录音乐时光\n💬 让聊天充满音乐的温度\n🤝 寻找一起看演出的搭子\n\n我们相信，最美好的相遇都始于共同的热爱。在 CoreApp，让音乐成为你们相识的开始，让现场成为友谊的见证。',
+                    '🎵 用音乐连接世界，用心灵触碰彼此\n\秒遇 不只是一个社交应用，更是属于音乐爱好者的专属空间。在这里，每一次心跳都与节拍同步，每一段旋律都能找到共鸣的灵魂。\n\n✨ 在现场遇见同频的人\n🎶 用动态记录音乐时光\n💬 让聊天充满音乐的温度\n🤝 寻找一起看演出的搭子\n\n我们相信，最美好的相遇都始于共同的热爱。在 秒遇，让音乐成为你们相识的开始，让现场成为友谊的见证。',
                     style: TextStyle(
                       fontSize: 15,
                       color: Color(0xFF333333),

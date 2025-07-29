@@ -469,290 +469,290 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: const Color(0xFFF7F8FA),
           body: GestureDetector(
             onTap: () {
               // 点击空白收起键盘
               FocusScope.of(context).unfocus();
             },
             child: Column(
+        children: [
+          // 顶部导航栏
+          Container(
+            height: 44 + safeTop,
+            padding: EdgeInsets.only(top: safeTop),
+            color: Colors.white,
+            child: Row(
               children: [
-                // 顶部导航栏
-                Container(
-                  height: 44 + safeTop,
-                  padding: EdgeInsets.only(top: safeTop),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_ios),
-                      ),
-                      const Expanded(
-                        child: Text(
-                          '编辑资料',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(width: 48), // 平衡左边的返回按钮
-                    ],
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_ios),
+                ),
+                const Expanded(
+                  child: Text(
+                    '编辑资料',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                
-                // 内容区域
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                const SizedBox(width: 48), // 平衡左边的返回按钮
+              ],
+            ),
+          ),
+          
+          // 内容区域
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 头像选择
+                  Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 头像选择
-                        Center(
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 24),
-                              GestureDetector(
-                                onTap: _pickImage,
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey[200],
-                                    border: Border.all(color: Colors.grey[300]!, width: 2),
-                                  ),
-                                  child: _selectedImage != null
-                                      ? ClipOval(
-                                          child: Image.file(
-                                            _selectedImage!,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : _buildCurrentAvatar(),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '请上传头像',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
-                        
-                        // 性格选择
-                        const Text(
-                          '你是什么性格的人',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedPersonality = 'icon_i.webp';
-                                  _hasChanges = true;
-                                });
-                              },
-                              child: Container(
-                                width: 100,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: _selectedPersonality == 'icon_i.webp'
-                                      ? const Color(0xFFFCF15D)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _selectedPersonality == 'icon_i.webp'
-                                        ? const Color(0xFFE6D93B)
-                                        : Colors.grey[300]!,
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'i 人',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+                        const SizedBox(height: 24),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.grey[200],
+                              border: Border.all(color: Colors.grey[300]!, width: 2),
+                            ),
+                            child: _selectedImage != null
+                                ? ClipOval(
+                                    child: Image.file(
+                                      _selectedImage!,
+                                      fit: BoxFit.cover,
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedPersonality = 'icon_e.webp';
-                                  _hasChanges = true;
-                                });
-                              },
-                              child: Container(
-                                width: 100,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: _selectedPersonality == 'icon_e.webp'
-                                      ? const Color(0xFFFCF15D)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _selectedPersonality == 'icon_e.webp'
-                                        ? const Color(0xFFE6D93B)
-                                        : Colors.grey[300]!,
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'e 人',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                                  )
+                                : _buildCurrentAvatar(),
+                          ),
                         ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // 昵称输入
-                        const Text(
-                          '大家应该怎么称呼你',
+                        const SizedBox(height: 12),
+                        Text(
+                          '请上传头像',
                           style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                            fontSize: 16,
+                            color: Colors.grey[600],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _nicknameController,
-                          maxLength: 20,
-                          decoration: InputDecoration(
-                            hintText: '取一个好听的昵称吧～',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            counterText: '', // 隐藏字符计数器
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // 喜欢的歌手
-                        const Text(
-                          '我最喜欢的歌手',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _singerController,
-                          maxLength: 20,
-                          decoration: InputDecoration(
-                            hintText: '你喜欢的歌手是？',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            counterText: '', // 隐藏字符计数器
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // 喜欢的歌曲
-                        const Text(
-                          '我最喜欢的歌曲',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _songController,
-                          maxLength: 20,
-                          decoration: InputDecoration(
-                            hintText: '你喜欢的歌曲是？',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            counterText: '', // 隐藏字符计数器
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ),
-                
-                // 底部保存按钮
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.white,
-                  child: Center(
-                    child: SizedBox(
-                      width: 200,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _canSave && !_isValidating && !_isLoading ? _saveProfile : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _canSave ? const Color(0xFF2C2C2C) : Colors.grey[300],
-                          foregroundColor: _canSave ? Colors.white : Colors.grey[500],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                  
+                  // 性格选择
+                  const Text(
+                    '你是什么性格的人',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedPersonality = 'icon_i.webp';
+                            _hasChanges = true;
+                          });
+                        },
+                        child: Container(
+                          width: 100,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _selectedPersonality == 'icon_i.webp'
+                                ? const Color(0xFFFCF15D)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedPersonality == 'icon_i.webp'
+                                  ? const Color(0xFFE6D93B)
+                                  : Colors.grey[300]!,
+                            ),
                           ),
-                          elevation: 0,
+                          child: const Center(
+                            child: Text(
+                              'i 人',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: const Text(
+                      ),
+                      const SizedBox(width: 20),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedPersonality = 'icon_e.webp';
+                            _hasChanges = true;
+                          });
+                        },
+                        child: Container(
+                          width: 100,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _selectedPersonality == 'icon_e.webp'
+                                ? const Color(0xFFFCF15D)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedPersonality == 'icon_e.webp'
+                                  ? const Color(0xFFE6D93B)
+                                  : Colors.grey[300]!,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'e 人',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // 昵称输入
+                  const Text(
+                    '大家应该怎么称呼你',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _nicknameController,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: '取一个好听的昵称吧～',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      counterText: '', // 隐藏字符计数器
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // 喜欢的歌手
+                  const Text(
+                    '我最喜欢的歌手',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _singerController,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: '你喜欢的歌手是？',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      counterText: '', // 隐藏字符计数器
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // 喜欢的歌曲
+                  const Text(
+                    '我最喜欢的歌曲',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _songController,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: '你喜欢的歌曲是？',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      counterText: '', // 隐藏字符计数器
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+          
+          // 底部保存按钮
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: Center(
+              child: SizedBox(
+                width: 200,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _canSave && !_isValidating && !_isLoading ? _saveProfile : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _canSave ? const Color(0xFF2C2C2C) : Colors.grey[300],
+                    foregroundColor: _canSave ? Colors.white : Colors.grey[500],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
                           '保存',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
-              ],
+              ),
             ),
           ),
+        ],
+            ),
+      ),
         ),
         
         // Loading遮罩层

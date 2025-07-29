@@ -8,6 +8,8 @@ import 'help_center_screen.dart';
 import 'feedback_screen.dart';
 import 'following_screen.dart';
 import 'webview_screen.dart';
+import 'user_agreement_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,35 +19,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // H5页面链接（稍后替换为实际链接）
-  static const String _privacyPolicyUrl = 'https://www.baidu.com';
-  static const String _userAgreementUrl = 'https://www.baidu.com';
-
-  // 打开隐私政策
-  void _openPrivacyPolicy() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WebViewScreen(
-          url: _privacyPolicyUrl,
-          title: '隐私政策',
-        ),
-      ),
-    );
-  }
-
-  // 打开用户协议
-  void _openUserAgreement() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WebViewScreen(
-          url: _userAgreementUrl,
-          title: '用户协议',
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +136,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: '隐私政策',
                 subtitle: '了解隐私保护',
                 onTap: () {
-                  _openPrivacyPolicy();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicyScreen(),
+                    ),
+                  );
                 },
               ),
               _buildSettingItem(
@@ -171,7 +149,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: '用户协议',
                 subtitle: '服务条款和协议',
                 onTap: () {
-                  _openUserAgreement();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserAgreementScreen(),
+                    ),
+                  );
                 },
               ),
             ],

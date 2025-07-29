@@ -5,7 +5,8 @@ import 'dart:math';
 import '../services/api_service.dart';
 import '../services/keychain_service.dart';
 import '../models/user_model.dart';
-import 'webview_screen.dart';
+import 'user_agreement_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,10 +16,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
-  // H5页面链接（稍后替换为实际链接）
-  static const String _privacyPolicyUrl = 'https://www.baidu.com';
-  static const String _userAgreementUrl = 'https://www.baidu.com';
-  
   bool _isAgreed = false;
   bool _isLoading = false;
   late AnimationController _shakeController;
@@ -149,10 +146,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WebViewScreen(
-          url: _privacyPolicyUrl,
-          title: '隐私授权协议',
-        ),
+        builder: (context) => const PrivacyPolicyScreen(),
       ),
     );
   }
@@ -162,10 +156,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WebViewScreen(
-          url: _userAgreementUrl,
-          title: '用户协议',
-        ),
+        builder: (context) => const UserAgreementScreen(),
       ),
     );
   }
