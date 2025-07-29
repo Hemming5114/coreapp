@@ -4,7 +4,7 @@ import '../services/chat_service.dart';
 import '../services/block_service.dart';
 import '../widgets/user_music_preferences_widget.dart';
 import 'feed_detail_screen.dart';
-import 'feed_report_screen.dart';
+import 'report_screen.dart';
 import 'chat_detail_screen.dart';
 import 'video_call_screen.dart';
 
@@ -101,9 +101,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> with SingleTickerPr
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FeedReportScreen(
-          feed: widget.user,
+        builder: (context) => ReportScreen(
+          data: widget.user,
           reportType: 'user',
+          title: '举报用户',
         ),
       ),
     );

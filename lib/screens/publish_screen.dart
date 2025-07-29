@@ -352,8 +352,8 @@ class _PublishScreenState extends State<PublishScreen> {
           SnackBar(
             content: Text(
               widget.editMode 
-                  ? '更新成功！动态将重新进入审核，审核通过后展示在广场' 
-                  : '发布成功！动态正在审核中，审核通过后将展示在广场'
+                  ? '更新成功！动态将重新进入审核，审核通过后展示在动态广场' 
+                  : '发布成功！动态正在审核中，审核通过后将展示在动态广场'
             ),
             duration: const Duration(seconds: 3),
           ),

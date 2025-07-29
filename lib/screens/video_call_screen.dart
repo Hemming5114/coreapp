@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../services/chat_service.dart';
@@ -13,39 +14,79 @@ class VideoCallScreen extends StatefulWidget {
   State<VideoCallScreen> createState() => _VideoCallScreenState();
 }
 
-class _VideoCallScreenState extends State<VideoCallScreen> {
+class _VideoCallScreenState extends State<VideoCallScreen> with WidgetsBindingObserver {
   bool _isCallEnded = false;
   String _callStatus = '正在等待对方接听...';
   Timer? _callTimer;
   Timer? _dotTimer;
   String _dots = '';
+  late AudioPlayer _audioPlayer;
 
   @override
   void initState() {
     super.initState();
-    _playCallSound();
+    WidgetsBinding.instance.addObserver(this);
+    _initAudioPlayer();
     _startCallTimer();
     _startDotAnimation();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _callTimer?.cancel();
     _dotTimer?.cancel();
-    // 停止音频播放
-    SystemSound.play(SystemSoundType.click);
+    _stopAudio();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _playCallSound() {
-    // 播放系统拨号音
-    Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_isCallEnded) {
-        timer.cancel();
-        return;
-      }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        // 应用进入后台时继续播放音频
+        break;
+      case AppLifecycleState.resumed:
+        // 应用恢复时检查是否需要继续播放
+        if (!_isCallEnded) {
+          _playCallSound();
+        }
+        break;
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+
+  Future<void> _initAudioPlayer() async {
+    _audioPlayer = AudioPlayer();
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _playCallSound();
+  }
+
+  Future<void> _playCallSound() async {
+    if (_isCallEnded) return;
+    
+    try {
+      await _audioPlayer.play(AssetSource('data/calling.m4a'));
+      print('开始播放通话音频');
+    } catch (e) {
+      print('播放音频失败: $e');
+      // 如果音频文件不存在，使用系统音效
       SystemSound.play(SystemSoundType.click);
-    });
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    try {
+      await _audioPlayer.stop();
+      print('停止播放通话音频');
+    } catch (e) {
+      print('停止音频失败: $e');
+    }
   }
 
   void _startDotAnimation() {
@@ -73,6 +114,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       _isCallEnded = true;
       _callStatus = '对方未接听';
     });
+
+    await _stopAudio();
 
     // 添加未接通消息
     try {
@@ -103,6 +146,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       _isCallEnded = true;
       _callStatus = '通话已取消';
     });
+
+    await _stopAudio();
 
     // 添加取消通话消息
     try {
@@ -191,6 +236,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                           child: Image.asset(
                             'assets/images/head/$avatar',
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[600],
+                                child: const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 50,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),

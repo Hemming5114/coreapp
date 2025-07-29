@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'plaza_report_screen.dart';
+import 'report_screen.dart';
 import 'user_detail_screen.dart';
 import '../services/api_service.dart';
 import '../services/chat_service.dart';
@@ -185,9 +185,10 @@ class _PlazaDetailScreenState extends State<PlazaDetailScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PlazaReportScreen(
-                                event: widget.event,
+                              builder: (context) => ReportScreen(
+                                data: widget.event,
                                 reportType: 'plaza',
+                                title: '举报活动',
                               ),
                             ),
                           );

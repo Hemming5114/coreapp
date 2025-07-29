@@ -23,6 +23,12 @@ import Photos
       self?.handlePhotosPermissionMethod(call: call, result: result)
     }
     
+    // 注册IDFA插件
+    let idfaChannel = FlutterMethodChannel(name: "idfa_service", binaryMessenger: controller.binaryMessenger)
+    idfaChannel.setMethodCallHandler { [weak self] (call, result) in
+      self?.handleIDFAMethod(call: call, result: result)
+    }
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
@@ -205,6 +211,28 @@ import Photos
         }
       }
       return "unknown"
+    }
+  }
+  
+  // MARK: - IDFA Methods
+  
+  private func handleIDFAMethod(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "getDeviceIdentifier":
+      UIDevice.getDeviceIdentifier { idfa in
+        result(idfa)
+      }
+      
+    case "getAdvertisingId":
+      let idfa = UIDevice.getAdvertisingId()
+      result(idfa)
+      
+    case "getDeviceType":
+      let deviceType = UIDevice.getDeviceType()
+      result(deviceType)
+      
+    default:
+      result(FlutterMethodNotImplemented)
     }
   }
 }

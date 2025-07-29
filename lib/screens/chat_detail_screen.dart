@@ -151,42 +151,48 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // 用户信息卡
-          _buildUserInfoCard(),
-          
-          // 消息列表
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFFFE44D),
-                    ),
-                  )
-                : _messages.isEmpty
-                    ? const Center(
-                        child: Text(
-                          '开始聊天吧',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF9598AC),
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          return _buildMessageItem(_messages[index]);
-                        },
+      body: GestureDetector(
+        onTap: () {
+          // 点击空白收起键盘
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            // 用户信息卡
+            _buildUserInfoCard(),
+            
+            // 消息列表
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFFFE44D),
                       ),
-          ),
-          
-          // 输入框
-          _buildInputArea(),
-        ],
+                    )
+                  : _messages.isEmpty
+                      ? const Center(
+                          child: Text(
+                            '开始聊天吧',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF9598AC),
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            return _buildMessageItem(_messages[index]);
+                          },
+                        ),
+            ),
+            
+            // 输入框
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }

@@ -49,6 +49,7 @@ dependencies:
   flutter_slidable: ^3.0.1
   url_launcher: ^6.2.4
   webview_flutter: ^4.4.2
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:

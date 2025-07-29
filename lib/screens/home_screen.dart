@@ -5,6 +5,7 @@ import 'profile_screen.dart';
 import 'find_partner_screen.dart';
 import 'publish_screen.dart';
 import 'chat_list_screen.dart';
+import '../services/idfa_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  String _idfa = "";
+  String _deviceType = "";
 
   final List<Widget> _pages = [
     const PlazaScreen(),
@@ -23,6 +26,38 @@ class _HomeScreenState extends State<HomeScreen> {
     const ChatListScreen(),
     const ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _getDeviceInfo();
+  }
+
+  /// 获取设备信息（IDFA和设备类型）
+  Future<void> _getDeviceInfo() async {
+    try {
+      final String idfa = await IDFAService.getDeviceIdentifier();
+      final String deviceType = await IDFAService.getDeviceType();
+      
+      if (mounted) {
+        setState(() {
+          _idfa = idfa;
+          _deviceType = deviceType;
+        });
+        
+        print('设备标识符: $idfa');
+        print('设备类型: $deviceType');
+        
+        if (idfa.isNotEmpty) {
+          print('成功获取到有效IDFA: $idfa');
+        } else {
+          print('未能获取到有效IDFA，用户可能拒绝了权限');
+        }
+      }
+    } catch (e) {
+      print('获取设备信息失败: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

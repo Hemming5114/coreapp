@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'feed_report_screen.dart';
+import 'report_screen.dart';
 import 'user_detail_screen.dart';
 import 'image_viewer_screen.dart';
 
@@ -196,9 +196,10 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> with TickerProvider
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FeedReportScreen(
-                          feed: widget.feed,
+                        builder: (context) => ReportScreen(
+                          data: widget.feed,
                           reportType: 'feed',
+                          title: '举报动态',
                         ),
                       ),
                     );
@@ -269,15 +270,9 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> with TickerProvider
                                 widget.feed['userName'] ?? '',
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF171717)),
                               ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE44D),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Text('e人', style: TextStyle(fontSize: 12, color: Color(0xFF171717), fontWeight: FontWeight.bold)),
-                              ),
+                              const SizedBox(width: 8),
+                              // 性格标签图片
+                              _buildPersonalityIcon(),
                             ],
                           ),
                         ),
@@ -307,5 +302,35 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> with TickerProvider
         ],
       ),
     );
+  }
+
+  Widget _buildPersonalityIcon() {
+    // 获取用户性格信息，优先从userData中获取，否则从feed中获取
+    String? personality;
+    if (widget.feed['userData'] != null && widget.feed['userData']['personality'] != null) {
+      personality = widget.feed['userData']['personality'];
+    } else if (widget.feed['personality'] != null) {
+      personality = widget.feed['personality'];
+    }
+
+    if (personality?.isNotEmpty == true) {
+      return Image.asset(
+        'assets/images/appicon/$personality',
+        height: 16,
+        errorBuilder: (context, error, stackTrace) {
+          // 如果加载失败，默认显示i人图标
+          return Image.asset(
+            'assets/images/appicon/icon_i.webp',
+            height: 16,
+          );
+        },
+      );
+    } else {
+      // 如果没有性格信息，默认显示i人图标
+      return Image.asset(
+        'assets/images/appicon/icon_i.webp',
+        height: 16,
+      );
+    }
   }
 } 
