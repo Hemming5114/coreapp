@@ -4,35 +4,34 @@ import Photos
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  private var photosChannel: FlutterMethodChannel?
+  private var keychainChannel: FlutterMethodChannel?
+  
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    
+    let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+    
+    // Keychain service channel
+    keychainChannel = FlutterMethodChannel(name: "keychain_service", binaryMessenger: controller.binaryMessenger)
+    keychainChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self?.handleKeychainMethodCall(call: call, result: result)
+    }
+    
+    // Photos permission channel
+    photosChannel = FlutterMethodChannel(name: "photos_permission", binaryMessenger: controller.binaryMessenger)
+    photosChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self?.handlePhotosMethodCall(call: call, result: result)
+    }
+    
     GeneratedPluginRegistrant.register(with: self)
-    
-    // 注册自定义keychain插件
-    let controller = window?.rootViewController as! FlutterViewController
-    let keychainChannel = FlutterMethodChannel(name: "keychain_service", binaryMessenger: controller.binaryMessenger)
-    keychainChannel.setMethodCallHandler { [weak self] (call, result) in
-      self?.handleKeychainMethod(call: call, result: result)
-    }
-    
-    // 注册Photos权限插件
-    let photosChannel = FlutterMethodChannel(name: "photos_permission", binaryMessenger: controller.binaryMessenger)
-    photosChannel.setMethodCallHandler { [weak self] (call, result) in
-      self?.handlePhotosPermissionMethod(call: call, result: result)
-    }
-    
-    // 注册IDFA插件
-    let idfaChannel = FlutterMethodChannel(name: "idfa_service", binaryMessenger: controller.binaryMessenger)
-    idfaChannel.setMethodCallHandler { [weak self] (call, result) in
-      self?.handleIDFAMethod(call: call, result: result)
-    }
-    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
-  private func handleKeychainMethod(call: FlutterMethodCall, result: @escaping FlutterResult) {
+  // Keychain methods
+  private func handleKeychainMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "saveToKeychain":
       guard let args = call.arguments as? [String: Any],
@@ -117,15 +116,16 @@ import Photos
     let status = SecItemDelete(query as CFDictionary)
     return status == errSecSuccess || status == errSecItemNotFound
   }
-  
-  // MARK: - Photos Permission Methods
-  
-  private func handlePhotosPermissionMethod(call: FlutterMethodCall, result: @escaping FlutterResult) {
+
+  // Photos permission methods
+  private func handlePhotosMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "requestPhotosAddPermission":
       requestPhotosAddPermission(result: result)
     case "checkPhotosAddPermission":
       checkPhotosAddPermission(result: result)
+    case "getPhotosPermissionStatus":
+      getPhotosPermissionStatus(result: result)
     case "openAppSettings":
       openAppSettings(result: result)
     default:
@@ -134,105 +134,104 @@ import Photos
   }
   
   private func requestPhotosAddPermission(result: @escaping FlutterResult) {
-    let status: PHAuthorizationStatus
-    
-    // iOS 14+ 支持 .addOnly 权限
     if #available(iOS 14, *) {
-      status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
-    } else {
-      // iOS 13 使用传统权限
-      status = PHPhotoLibrary.authorizationStatus()
-    }
-    
-    if status == .notDetermined {
-      if #available(iOS 14, *) {
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { authorizationStatus in
-          DispatchQueue.main.async {
-            result(self.authorizationStatusToString(authorizationStatus))
-          }
-        }
-      } else {
-        PHPhotoLibrary.requestAuthorization { authorizationStatus in
-          DispatchQueue.main.async {
-            result(self.authorizationStatusToString(authorizationStatus))
+      PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+        DispatchQueue.main.async {
+          switch status {
+          case .authorized, .limited:
+            result("authorized")
+          case .denied:
+            result("denied")
+          case .restricted:
+            result("restricted")
+          case .notDetermined:
+            result("notDetermined")
+          @unknown default:
+            result("unknown")
           }
         }
       }
     } else {
-      result(authorizationStatusToString(status))
+      PHPhotoLibrary.requestAuthorization { status in
+        DispatchQueue.main.async {
+          switch status {
+          case .authorized:
+            result("authorized")
+          case .denied:
+            result("denied")
+          case .restricted:
+            result("restricted")
+          case .notDetermined:
+            result("notDetermined")
+          @unknown default:
+            result("unknown")
+          }
+        }
+      }
     }
   }
   
   private func checkPhotosAddPermission(result: @escaping FlutterResult) {
-    let status: PHAuthorizationStatus
-    
-    // iOS 14+ 支持 .addOnly 权限
     if #available(iOS 14, *) {
-      status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+      let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+      switch status {
+      case .authorized, .limited:
+        result(true)
+      default:
+        result(false)
+      }
     } else {
-      // iOS 13 使用传统权限
-      status = PHPhotoLibrary.authorizationStatus()
+      let status = PHPhotoLibrary.authorizationStatus()
+      result(status == .authorized)
     }
-    
-    result(authorizationStatusToString(status))
+  }
+  
+  private func getPhotosPermissionStatus(result: @escaping FlutterResult) {
+    if #available(iOS 14, *) {
+      let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+      switch status {
+      case .authorized:
+        result("authorized")
+      case .limited:
+        result("limited")
+      case .denied:
+        result("denied")
+      case .restricted:
+        result("restricted")
+      case .notDetermined:
+        result("notDetermined")
+      @unknown default:
+        result("unknown")
+      }
+    } else {
+      let status = PHPhotoLibrary.authorizationStatus()
+      switch status {
+      case .authorized:
+        result("authorized")
+      case .denied:
+        result("denied")
+      case .restricted:
+        result("restricted")
+      case .notDetermined:
+        result("notDetermined")
+      @unknown default:
+        result("unknown")
+      }
+    }
   }
   
   private func openAppSettings(result: @escaping FlutterResult) {
-    DispatchQueue.main.async {
-      if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-        if UIApplication.shared.canOpenURL(settingsUrl) {
-          UIApplication.shared.open(settingsUrl) { success in
-            result(success)
-          }
-        } else {
-          result(false)
-        }
-      } else {
-        result(false)
-      }
+    guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+      result(false)
+      return
     }
-  }
-  
-  private func authorizationStatusToString(_ status: PHAuthorizationStatus) -> String {
-    switch status {
-    case .authorized:
-      return "authorized"
-    case .denied:
-      return "denied"
-    case .restricted:
-      return "restricted"
-    case .notDetermined:
-      return "notDetermined"
-    default:
-      // iOS 14+ 才有 .limited 状态
-      if #available(iOS 14, *) {
-        if status == .limited {
-          return "limited"
-        }
+    
+    if UIApplication.shared.canOpenURL(settingsUrl) {
+      UIApplication.shared.open(settingsUrl) { success in
+        result(success)
       }
-      return "unknown"
-    }
-  }
-  
-  // MARK: - IDFA Methods
-  
-  private func handleIDFAMethod(call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "getDeviceIdentifier":
-      UIDevice.getDeviceIdentifier { idfa in
-        result(idfa)
-      }
-      
-    case "getAdvertisingId":
-      let idfa = UIDevice.getAdvertisingId()
-      result(idfa)
-      
-    case "getDeviceType":
-      let deviceType = UIDevice.getDeviceType()
-      result(deviceType)
-      
-    default:
-      result(FlutterMethodNotImplemented)
+    } else {
+      result(false)
     }
   }
 }

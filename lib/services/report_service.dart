@@ -18,12 +18,12 @@ class ReportService {
   // 保存举报记录到本地
   static Future<void> saveReport(ReportModel report) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final reports = await getReportHistory();
-      reports.add(report);
-      
-      final reportsJson = reports.map((r) => r.toJson()).toList();
-      await prefs.setString(_reportHistoryKey, jsonEncode(reportsJson));
+    final prefs = await SharedPreferences.getInstance();
+    final reports = await getReportHistory();
+    reports.add(report);
+    
+    final reportsJson = reports.map((r) => r.toJson()).toList();
+    await prefs.setString(_reportHistoryKey, jsonEncode(reportsJson));
       
       debugPrint('举报记录保存成功: ${report.reportType} - ${report.reportedTitle}');
     } catch (e) {
@@ -35,12 +35,12 @@ class ReportService {
   // 获取举报历史
   static Future<List<ReportModel>> getReportHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final reportsJson = prefs.getString(_reportHistoryKey);
-      
+    final prefs = await SharedPreferences.getInstance();
+    final reportsJson = prefs.getString(_reportHistoryKey);
+    
       if (reportsJson == null || reportsJson.isEmpty) {
-        return [];
-      }
+      return [];
+    }
 
       final List<dynamic> reportsList = jsonDecode(reportsJson);
       final reports = reportsList.map((json) => ReportModel.fromJson(json)).toList();
@@ -59,8 +59,8 @@ class ReportService {
   // 清除举报历史
   static Future<void> clearReportHistory() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_reportHistoryKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_reportHistoryKey);
       debugPrint('举报历史已清除');
     } catch (e) {
       debugPrint('清除举报历史失败: $e');

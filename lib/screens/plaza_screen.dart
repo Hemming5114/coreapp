@@ -52,11 +52,7 @@ class _PlazaScreenState extends State<PlazaScreen> with WidgetsBindingObserver, 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      // 应用重新获得焦点时刷新数据
-      debugPrint('PlazaScreen: 应用恢复，开始刷新数据');
-      _loadEvents();
-    }
+    
   }
 
   @override

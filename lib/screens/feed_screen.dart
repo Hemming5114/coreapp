@@ -42,10 +42,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver, Au
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      // 应用重新获得焦点时刷新数据
-      _loadFeeds();
-    }
+    
   }
 
   @override

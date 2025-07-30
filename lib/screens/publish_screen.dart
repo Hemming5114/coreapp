@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/moment_service.dart';
 import '../services/api_service.dart';
 import '../services/image_storage_service.dart';
+import '../services/keychain_service.dart';
+import '../models/user_model.dart';
+import 'coin_recharge_screen.dart';
+import 'vip_recharge_screen.dart';
+import 'ai_content_generator_screen.dart';
 
 class PublishScreen extends StatefulWidget {
   final bool editMode;
@@ -28,10 +34,17 @@ class _PublishScreenState extends State<PublishScreen> {
   List<File> _selectedImages = [];
   bool _isSubmitting = false;
   bool _isValidating = false;
+  
+  // 用户数据相关
+  UserModel? _userData;
+  int _todayPublishCount = 0;
 
   @override
   void initState() {
     super.initState();
+    
+    // 加载用户数据
+    _loadUserData();
     
     // 如果是编辑模式，填充现有数据
     if (widget.editMode && widget.editData != null) {
@@ -71,6 +84,38 @@ class _PublishScreenState extends State<PublishScreen> {
     }
     
     setState(() {});
+  }
+  
+  // 加载用户数据
+  Future<void> _loadUserData() async {
+    try {
+      final userInfo = await KeychainService.getUserInfo();
+      if (userInfo != null && userInfo.isNotEmpty) {
+        setState(() {
+          _userData = UserModel.fromJson(userInfo);
+        });
+        // 加载今日发布次数
+        await _loadTodayPublishCount();
+      }
+    } catch (e) {
+      debugPrint('加载用户数据失败: $e');
+    }
+  }
+  
+  // 加载今日发布次数
+  Future<void> _loadTodayPublishCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final todayKey = 'moment_publish_count_${today.year}_${today.month}_${today.day}';
+      
+      final count = prefs.getInt(todayKey) ?? 0;
+      setState(() {
+        _todayPublishCount = count;
+      });
+    } catch (e) {
+      debugPrint('加载今日发布次数失败: $e');
+    }
   }
 
   // 选择图片
@@ -248,8 +293,7 @@ class _PublishScreenState extends State<PublishScreen> {
         '标题："$title"\n'
         '内容："$content"\n'
         '检查标准：只需要检查是否包含明显的涉黄、涉黑、政治敏感等严重不当内容。'
-        '对于正常的音乐分享、演出体验、生活感悟等内容应该放行。'
-        '如果内容正常，请只回复"通过"。'
+        '如果内容正常或者无法判断，请只回复"通过"。'
         '如果包含明显不当内容，请回复"拒绝：具体原因"。'
       );
       
@@ -292,8 +336,19 @@ class _PublishScreenState extends State<PublishScreen> {
   Future<void> _saveData() async {
     if (!_validateForm()) return;
     
-    // 收起键盘
-    _dismissKeyboard();
+    // 收起键盘并移除焦点
+    _clearFocusAndDismissKeyboard();
+    
+    // 等待键盘完全收起
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    // 检查发布限制
+    final canPublish = await _checkPublishLimit();
+    if (!canPublish) {
+      // 如果发布被取消，确保键盘不会重新弹出
+      _clearFocusAndDismissKeyboard();
+      return;
+    }
     
     setState(() {
       _isSubmitting = true;
@@ -304,6 +359,8 @@ class _PublishScreenState extends State<PublishScreen> {
       final isApproved = await _validateContent();
       
       if (!isApproved) {
+        // 如果审核失败，确保键盘不会重新弹出
+        _clearFocusAndDismissKeyboard();
         return;
       }
       
@@ -336,6 +393,14 @@ class _PublishScreenState extends State<PublishScreen> {
       } else {
         // 新增模式：直接保存
         success = await MomentService.saveMoment(data);
+        
+        // 发布成功后扣除金币和增加发布次数
+        if (success) {
+          await _incrementPublishCount();
+          if (!_isVipActive() && _todayPublishCount >= 3) {
+            await _deductCoins();
+          }
+        }
       }
       
       if (!success) {
@@ -344,6 +409,8 @@ class _PublishScreenState extends State<PublishScreen> {
             SnackBar(content: Text(widget.editMode ? '更新失败，请重试' : '保存失败，请重试')),
           );
         }
+        // 如果保存失败，确保键盘不会重新弹出
+        _clearFocusAndDismissKeyboard();
         return;
       }
       
@@ -369,6 +436,8 @@ class _PublishScreenState extends State<PublishScreen> {
           const SnackBar(content: Text('保存失败，请重试')),
         );
       }
+      // 如果发生异常，确保键盘不会重新弹出
+      _clearFocusAndDismissKeyboard();
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -379,6 +448,833 @@ class _PublishScreenState extends State<PublishScreen> {
   // 收起键盘
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
+  }
+  
+  // 强制移除焦点并收起键盘
+  void _clearFocusAndDismissKeyboard() {
+    // 1. 清除输入框的组合状态
+    _titleController.clearComposing();
+    _contentController.clearComposing();
+    
+    // 2. 立即移除焦点
+    FocusScope.of(context).unfocus();
+    
+    // 3. 确保当前焦点节点失去焦点
+    final currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+      currentFocus.focusedChild!.unfocus();
+    }
+    
+    // 4. 延迟确保彻底清除焦点
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+      // 再次确保任何子焦点节点都失去焦点
+      final currentFocus = FocusScope.of(context);
+      if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+        currentFocus.focusedChild!.unfocus();
+      }
+    });
+    
+    // 5. 延迟更久一点，确保键盘完全收起
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        final currentContext = context;
+        if (currentContext.mounted) {
+          FocusScope.of(currentContext).unfocus();
+        }
+      }
+    });
+  }
+  
+  // 检查发布限制
+  Future<bool> _checkPublishLimit() async {
+    if (_userData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('用户信息加载失败，请重试')),
+      );
+      return false;
+    }
+    
+    // 如果是编辑模式，不检查发布限制
+    if (widget.editMode) {
+      return true;
+    }
+    
+    // 检查是否是VIP
+    final isVip = _isVipActive();
+    if (isVip) {
+      return true; // VIP无限发布
+    }
+    
+    // 检查今日发布次数
+    final remainingFreeCount = 3 - _todayPublishCount;
+    
+    if (remainingFreeCount > 0) {
+      // 还有免费机会
+      return await _showFreePublishDialog(remainingFreeCount);
+    } else {
+      // 没有免费机会，检查金币
+      if (_userData!.coins >= 10) {
+        // 金币充足
+        return await _showCoinPublishDialog();
+      } else {
+        // 金币不足
+        return await _showInsufficientCoinDialog();
+      }
+    }
+  }
+  
+  // 检查VIP状态
+  bool _isVipActive() {
+    if (_userData?.membershipExpiry == null) return false;
+    return DateTime.now().isBefore(_userData!.membershipExpiry);
+  }
+  
+  // 显示免费发布确认弹框
+  Future<bool> _showFreePublishDialog(int remainingCount) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  size: 16,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '确认发布',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                icon: const Icon(Icons.close, size: 20, color: Color(0xFF999999)),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF333333),
+                    height: 1.5,
+                  ),
+                  children: [
+                    const TextSpan(text: '您今天还有 '),
+                    TextSpan(
+                      text: '$remainingCount',
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const TextSpan(text: ' 次免费发布机会\n\n确定要发布这条动态信息吗？'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFFE44D), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      size: 16,
+                      color: Color(0xFFFF9800),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '成为VIP会员后可无限制发布',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFF5F5F5),
+                      foregroundColor: const Color(0xFF666666),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      '取消',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFE44D),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      '发布',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+  
+  // 显示金币发布弹框
+  Future<bool> _showCoinPublishDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.monetization_on_outlined,
+                  size: 16,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '发布确认',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                icon: const Icon(Icons.close, size: 20, color: Color(0xFF999999)),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF333333),
+                    height: 1.5,
+                  ),
+                  children: [
+                    const TextSpan(text: '您的免费发布次数已用完\n\n发布将消耗 '),
+                    TextSpan(
+                      text: '10金币',
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const TextSpan(text: '，当前余额：'),
+                    TextSpan(
+                      text: '${_userData!.coins}金币',
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '选择发布方式：',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF333333),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFFFE44D), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      size: 14,
+                      color: Color(0xFFFF9800),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '成为VIP会员后可无限制发布',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.orange[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          '使用金币发布',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                          _navigateToVip();
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFE44D),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          '成为VIP',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+  
+  // 显示金币不足弹框
+  Future<bool> _showInsufficientCoinDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.warning_amber_outlined,
+                  size: 16,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '金币不足',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                icon: const Icon(Icons.close, size: 20, color: Color(0xFF999999)),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF333333),
+                    height: 1.5,
+                  ),
+                  children: [
+                    const TextSpan(text: '您的免费发布次数已用完\n\n发布需要 '),
+                    TextSpan(
+                      text: '10金币',
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const TextSpan(text: '，当前余额：'),
+                    TextSpan(
+                      text: '${_userData!.coins}金币',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '请选择：',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF333333),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFFFE44D), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      size: 14,
+                      color: Color(0xFFFF9800),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '成为VIP会员后可无限制发布',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.orange[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                          _navigateToCoinRecharge();
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          '去充值',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                          _navigateToVip();
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFE44D),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          '成为VIP',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+  
+  // 导航到金币充值页面
+  void _navigateToCoinRecharge() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CoinRechargeScreen(
+          currentCoins: _userData?.coins ?? 0,
+          onRechargeSuccess: () {
+            _loadUserData(); // 刷新用户数据
+          },
+        ),
+      ),
+    );
+  }
+  
+  // 导航到VIP充值页面
+  void _navigateToVip() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VipRechargeScreen(
+          userData: _userData,
+          onRechargeSuccess: () {
+            _loadUserData(); // 刷新用户数据
+          },
+        ),
+      ),
+    );
+  }
+  
+  // 扣除金币
+  Future<void> _deductCoins() async {
+    if (_userData == null) return;
+    
+    try {
+      // 扣除10金币
+      final newCoins = _userData!.coins - 10;
+      final updatedUserData = UserModel(
+        name: _userData!.name,
+        userId: _userData!.userId,
+        coins: newCoins,
+        membershipExpiry: _userData!.membershipExpiry,
+        personality: _userData!.personality,
+        head: _userData!.head,
+        originalHead: _userData!.originalHead,
+        lovesinger: _userData!.lovesinger,
+        lovesong: _userData!.lovesong,
+        followCount: _userData!.followCount,
+        fansCount: _userData!.fansCount,
+      );
+      
+      // 保存更新后的用户数据
+      final success = await KeychainService.saveUserInfo(updatedUserData.toJson());
+      if (success) {
+        setState(() {
+          _userData = updatedUserData;
+        });
+        debugPrint('扣除金币成功，当前余额：$newCoins');
+      } else {
+        debugPrint('扣除金币失败');
+      }
+    } catch (e) {
+      debugPrint('扣除金币异常：$e');
+    }
+  }
+
+  // 增加今日发布次数
+  Future<void> _incrementPublishCount() async {
+    if (_userData == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final todayKey = 'moment_publish_count_${today.year}_${today.month}_${today.day}';
+
+      final count = prefs.getInt(todayKey) ?? 0;
+      final newCount = count + 1;
+
+      await prefs.setInt(todayKey, newCount);
+      setState(() {
+        _todayPublishCount = newCount;
+      });
+      debugPrint('今日动态发布次数增加成功，当前次数：$newCount');
+    } catch (e) {
+      debugPrint('增加今日动态发布次数失败: $e');
+    }
+  }
+  
+  // 显示收费说明
+  void _showPricingInfo() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE44D),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '发布规则说明',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPricingItem(
+                '普通用户',
+                '每天3次免费发布机会',
+                Icons.person_outline,
+                Colors.blue,
+              ),
+              const SizedBox(height: 12),
+              _buildPricingItem(
+                '超出免费次数',
+                '每发布一次消耗10金币',
+                Icons.monetization_on_outlined,
+                Colors.orange,
+              ),
+              const SizedBox(height: 12),
+              _buildPricingItem(
+                '审核未通过',
+                '退回10金币到账户',
+                Icons.refresh,
+                Colors.green,
+              ),
+              const SizedBox(height: 12),
+              _buildPricingItem(
+                'VIP会员',
+                '无限次免费发布',
+                Icons.star,
+                Colors.purple,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFFFFE44D),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              ),
+              child: const Text(
+                '我知道了',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  // 导航到AI生成器
+  Future<void> _navigateToAIGenerator() async {
+    // 在导航前先收起键盘
+    _clearFocusAndDismissKeyboard();
+    
+    // 等待键盘完全收起
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    if (!mounted) return;
+    
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AIContentGeneratorScreen(
+          title: '动态内容',
+          hintText: '一起来分享令你印象深刻的现场瞬间吧~',
+          type: 'moment',
+        ),
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _contentController.text = result;
+      });
+    }
+  }
+
+  Widget _buildPricingItem(String title, String description, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -407,6 +1303,12 @@ class _PublishScreenState extends State<PublishScreen> {
                 ),
               ),
               centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.help_outline, color: Colors.black),
+                  onPressed: _showPricingInfo,
+                ),
+              ],
       ),
             body: Column(
               children: [
@@ -457,22 +1359,71 @@ class _PublishScreenState extends State<PublishScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: TextField(
-                            controller: _contentController,
-                            maxLines: 8,
-                            decoration: const InputDecoration(
-                              hintText: '一起来分享令你印象深刻的现场瞬间吧~',
-                              hintStyle: TextStyle(
-                                color: Color(0xFFCCCCCC),
-                                fontSize: 16,
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _contentController,
+                                maxLines: 8,
+                                decoration: const InputDecoration(
+                                  hintText: '一起来分享令你印象深刻的现场瞬间吧~',
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFFCCCCCC),
+                                    fontSize: 16,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                onChanged: (value) {
+                                  setState(() {});
+                                },
                               ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  GestureDetector(
+                                    onTap: _navigateToAIGenerator,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFE44D),
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.auto_awesome,
+                                            size: 16,
+                                            color: Colors.black,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'AI生成文案',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${_contentController.text.length}/2000',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF999999),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                         

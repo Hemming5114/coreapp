@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       name: nickname,
       userId: random.nextInt(900000) + 100000, // 6位数
       coins: random.nextInt(9000) + 1000, // 4位数
-      membershipExpiry: DateTime.now().add(const Duration(days: 365)), // 一年后
+      membershipExpiry: DateTime.now().subtract(const Duration(days: 1)), // 前一天
       personality: random.nextBool() ? 'icon_i.webp' : 'icon_e.webp',
       head: avatarPath,
       originalHead: avatarPath, // 保存原始头像

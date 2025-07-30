@@ -12,6 +12,8 @@ import 'publish_screen.dart';
 import 'find_partner_screen.dart';
 import 'settings_screen.dart';
 import 'package:path_provider/path_provider.dart';
+import 'coin_recharge_screen.dart';
+import 'vip_recharge_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -143,6 +145,49 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             right: 16,
             child: Row(
               children: [
+                // 金币入口
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CoinRechargeScreen(
+                          currentCoins: _userData?.coins ?? 0,
+                          onRechargeSuccess: () {
+                            _loadUserData(); // 刷新用户数据
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF4E6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/appicon/icon_me_coin.webp',
+                          width: 16,
+                          height: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_userData?.coins ?? 0}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFFF8C00),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 // 编辑个人资料按钮
                 GestureDetector(
                   onTap: _navigateToEditProfile,
@@ -195,7 +240,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             left: 16,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 17, 16, 16), // 调整top padding让昵称与头像中心对齐
+              padding: const EdgeInsets.fromLTRB(16, 17, 16, 16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -266,29 +311,151 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           Positioned(
             top: safeTop + 60 - 28, // 卡片顶部 - 28px
             left: 16 + 12, // 卡片左边距 + 12px
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            child: Stack(
+              children: [
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  child: _buildAvatarWidget(size: 90),
+                ),
+                // VIP图标
+                if (_isVipActive())
+                  Positioned(
+                    bottom: 0,
+                    right: 6,
+                    child: Container(
+                      width: 25,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/appicon/icon_me_vip.webp',
+                          width: 25,
+                          height: 25,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // VIP入口
+          Positioned(
+            top: safeTop + 60 + 160 + 12, // 个人信息卡片底部 + 12px间距
+            left: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VipRechargeScreen(
+                      userData: _userData,
+                      onRechargeSuccess: () {
+                        _loadUserData(); // 刷新用户数据
+                      },
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                height: 62,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Stack(
+                  children: [
+                    // 背景图
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/appicon/bg_me_vip.webp',
+                        width: double.infinity,
+                        height: 62,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    // 内容
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      child: Row(
+                        children: [
+                          // 左边文字区域
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  '会员',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600, // Semibold
+                                    color: const Color(0xFF171717),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '解锁更多特权',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500, // Medium
+                                    color: const Color(0xFF171717).withValues(alpha: 0.6), // 60%透明度
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // 右边按钮
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _isVipActive() ? '已开通' : '去开通',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-                child: _buildAvatarWidget(size: 90),
             ),
           ),
           
-
-          
           // Tab内容区域
           Positioned(
-            top: safeTop + 60 + 160 + 10, // 个人信息卡片位置 + 卡片高度 + 20px间距
+            top: safeTop + 60 + 160 + 12 + 62 + 12, // VIP入口底部 + 12px间距
             left: 0,
             right: 0,
             bottom: 0,
@@ -1296,6 +1463,19 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     if (result == true) {
       _loadUserData();
     }
+  }
+
+  // 判断VIP是否有效
+  bool _isVipActive() {
+    if (_userData?.membershipExpiry == null) return false;
+    return DateTime.now().isBefore(_userData!.membershipExpiry);
+  }
+
+  // 格式化VIP到期时间
+  String _formatVipExpiry() {
+    if (!_isVipActive()) return '未开通VIP';
+    final expiry = _userData!.membershipExpiry;
+    return '${expiry.year}.${expiry.month.toString().padLeft(2, '0')}.${expiry.day.toString().padLeft(2, '0')}到期';
   }
   
 } 

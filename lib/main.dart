@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/publish_screen.dart';
 import 'services/image_storage_service.dart';
 import 'services/data_migration_service.dart';
+import 'services/in_app_purchase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,9 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+  
+  // 初始化内购服务
+  await InAppPurchaseService.initialize();
   
   // 清理无效的图片文件和数据
   try {
