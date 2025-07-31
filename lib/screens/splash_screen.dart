@@ -13,7 +13,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    KeychainService.deleteUserInfo();
     _requestNetwork();
     _checkUserAndNavigate();
   }

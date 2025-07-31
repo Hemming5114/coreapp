@@ -24,7 +24,7 @@ class _CoinRechargeScreenState extends State<CoinRechargeScreen> {
 
   final List<Map<String, dynamic>> _coinPackages = [
     {
-      'productId': '6_ml_coin',
+      'productId': 'com.yeliao.shanliana60',
       'coins': 60,
       'price': 6,
     },

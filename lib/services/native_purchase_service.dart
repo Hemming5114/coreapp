@@ -105,7 +105,7 @@ class NativePurchaseService {
 
   // 产品配置
   static const Set<String> _coinProductIds = {
-    '6_ml_coin',
+    'com.yeliao.shanliana60',
     'com.yeliao.shanliana300',
     'com.yeliao.shanliana1130',
     'com.yeliao.shanliana2350',
@@ -114,7 +114,7 @@ class NativePurchaseService {
   };
   
   // VIP首充产品ID
-  static const String _firstPurchaseProductId = '88_ml_month';
+  static const String _firstPurchaseProductId = 'com.yeliao.shanliana0';
 
   /// 初始化服务
   static Future<void> initialize() async {
@@ -421,7 +421,7 @@ class NativePurchaseService {
   /// 根据产品ID获取金币数量
   static int _getCoinsByProductId(String productId) {
     switch (productId) {
-      case '6_ml_coin':
+      case 'com.yeliao.shanliana60':
         return 60;
       case 'com.yeliao.shanliana300':
         return 300;
@@ -441,7 +441,7 @@ class NativePurchaseService {
   /// 根据产品ID获取VIP月数
   static int _getMonthsByProductId(String productId) {
     switch (productId) {
-      case '88_ml_month': // 月会员首充
+      case 'com.yeliao.shanliana0': // 月会员首充
       case 'com.yeliao.shanliana1': // 月会员
         return 1;
       case 'com.yeliao.shanliana2': // 季度会员

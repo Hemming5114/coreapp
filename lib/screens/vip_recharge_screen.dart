@@ -27,7 +27,7 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
 
   final List<Map<String, dynamic>> _vipPackages = [
     {
-      'productId': '88_ml_month',
+      'productId': 'com.yeliao.shanliana0',
       'title': '月会员首充',
       'price': 88,
       'duration': '1个月',
@@ -99,7 +99,7 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
             });
             
             // 如果购买的是首充产品，更新首充状态
-            if (event.productId == '88_ml_month' && !event.isRestored) {
+            if (event.productId == 'com.yeliao.shanliana0' && !event.isRestored) {
               setState(() {
                 _hasCompletedFirstPurchase = true;
               });
