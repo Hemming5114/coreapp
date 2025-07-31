@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
-import '../services/in_app_purchase_service.dart';
+import '../services/native_purchase_service.dart';
+import '../services/first_purchase_service.dart';
+import 'dart:async';
 
 class VipRechargeScreen extends StatefulWidget {
   final UserModel? userData;
@@ -19,10 +21,13 @@ class VipRechargeScreen extends StatefulWidget {
 class _VipRechargeScreenState extends State<VipRechargeScreen> {
   int _selectedIndex = 0;
   bool _isLoading = false;
+  UserModel? _currentUserData; // 用于显示的用户数据
+  StreamSubscription<PurchaseEvent>? _purchaseSubscription;
+  bool _hasCompletedFirstPurchase = false; // 是否已完成首充
 
   final List<Map<String, dynamic>> _vipPackages = [
     {
-      'productId': 'com.yeliao.shanliana0',
+      'productId': '88_ml_month',
       'title': '月会员首充',
       'price': 88,
       'duration': '1个月',
@@ -43,6 +48,102 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
       'isFirstTime': false,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUserData = widget.userData;
+    _checkFirstPurchaseStatus();
+    _initializeAndListenToPurchaseEvents();
+  }
+
+  @override
+  void dispose() {
+    _purchaseSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// 检查首充状态
+  void _checkFirstPurchaseStatus() async {
+    try {
+      final hasCompleted = await FirstPurchaseService.hasCompletedFirstPurchase();
+      setState(() {
+        _hasCompletedFirstPurchase = hasCompleted;
+      });
+      print('首充状态检查: ${hasCompleted ? "已完成" : "未完成"}');
+    } catch (e) {
+      print('检查首充状态失败: $e');
+    }
+  }
+
+  /// 初始化并监听购买事件
+  void _initializeAndListenToPurchaseEvents() async {
+    // 初始化原生内购服务
+    await NativePurchaseService.initialize();
+    
+    _purchaseSubscription = NativePurchaseService.purchaseEventStream.listen((event) {
+      if (!mounted) return;
+      
+      // 只处理VIP产品的购买事件
+      final vipProductIds = _vipPackages.map((package) => package['productId'] as String).toSet();
+      if (!vipProductIds.contains(event.productId)) {
+        return; // 不是VIP产品，忽略此事件
+      }
+      
+      switch (event.result) {
+        case PurchaseResult.success:
+          if (event.updatedUserData != null) {
+            setState(() {
+              _currentUserData = event.updatedUserData!;
+              _isLoading = false;
+            });
+            
+            // 如果购买的是首充产品，更新首充状态
+            if (event.productId == '88_ml_month' && !event.isRestored) {
+              setState(() {
+                _hasCompletedFirstPurchase = true;
+              });
+            }
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(event.isRestored ? 'VIP权益已恢复！' : 'VIP开通成功！'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            
+            // 调用成功回调
+            widget.onRechargeSuccess();
+          }
+          break;
+          
+        case PurchaseResult.error:
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('开通失败：${event.errorMessage ?? "未知错误"}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          break;
+          
+        case PurchaseResult.canceled:
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('开通已取消')),
+          );
+          break;
+          
+        case PurchaseResult.pending:
+          // 保持loading状态
+          break;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +207,7 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.userData?.name ?? '用户',
+                        _currentUserData?.name ?? '用户',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500, // Medium
@@ -177,6 +278,8 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                 itemBuilder: (context, index) {
                   final package = _vipPackages[index];
                   final isSelected = index == _selectedIndex;
+                  final isFirstTimePackage = package['isFirstTime'] as bool;
+                  final isFirstTimeUnavailable = isFirstTimePackage && _hasCompletedFirstPurchase;
 
                   return GestureDetector(
                     onTap: () {
@@ -188,10 +291,12 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isFirstTimeUnavailable ? Colors.grey[100] : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFFFE44D) : Colors.transparent,
+                          color: isFirstTimeUnavailable 
+                              ? Colors.grey[300]! 
+                              : (isSelected ? const Color(0xFFFFE44D) : Colors.transparent),
                           width: 2,
                         ),
                         boxShadow: [
@@ -211,12 +316,16 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected ? const Color(0xFFFFE44D) : const Color(0xFFCCCCCC),
+                                color: isFirstTimeUnavailable 
+                                    ? Colors.grey[400]!
+                                    : (isSelected ? const Color(0xFFFFE44D) : const Color(0xFFCCCCCC)),
                                 width: 2,
                               ),
-                              color: isSelected ? const Color(0xFFFFE44D) : Colors.transparent,
+                              color: isFirstTimeUnavailable 
+                                  ? Colors.grey[300]
+                                  : (isSelected ? const Color(0xFFFFE44D) : Colors.transparent),
                             ),
-                            child: isSelected
+                            child: isSelected && !isFirstTimeUnavailable
                                 ? const Icon(
                                     Icons.check,
                                     size: 14,
@@ -236,23 +345,23 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                                   children: [
                                     Text(
                                       package['title'],
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black,
+                                        color: isFirstTimeUnavailable ? Colors.grey[500] : Colors.black,
                                       ),
                                     ),
-                                    if (package['isFirstTime'])
+                                    if (isFirstTimePackage)
                                       Container(
                                         margin: const EdgeInsets.only(left: 8),
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFFF4444),
+                                          color: isFirstTimeUnavailable ? Colors.grey[400] : const Color(0xFFFF4444),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: const Text(
-                                          '首充特惠',
-                                          style: TextStyle(
+                                        child: Text(
+                                          isFirstTimeUnavailable ? '已购买' : '首充特惠',
+                                          style: const TextStyle(
                                             fontSize: 10,
                                             color: Colors.white,
                                             fontWeight: FontWeight.w500,
@@ -263,9 +372,9 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                                 ),
                                 Text(
                                   package['duration'],
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: Color(0xFF666666),
+                                    color: isFirstTimeUnavailable ? Colors.grey[500] : const Color(0xFF666666),
                                   ),
                                 ),
                               ],
@@ -278,10 +387,10 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
                             children: [
                               Text(
                                 '¥${package['price']}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black,
+                                  color: isFirstTimeUnavailable ? Colors.grey[500] : Colors.black,
                                 ),
                               ),
                             ],
@@ -381,32 +490,34 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
   }
 
   bool _isVipActive() {
-    if (widget.userData?.membershipExpiry == null) return false;
-    return DateTime.now().isBefore(widget.userData!.membershipExpiry);
+    if (_currentUserData?.membershipExpiry == null) return false;
+    return DateTime.now().isBefore(_currentUserData!.membershipExpiry);
   }
 
   String _formatVipExpiry() {
     if (!_isVipActive()) return '未开通VIP';
-    final expiry = widget.userData!.membershipExpiry;
+    final expiry = _currentUserData!.membershipExpiry;
     return '${expiry.year}.${expiry.month.toString().padLeft(2, '0')}.${expiry.day.toString().padLeft(2, '0')}到期';
   }
 
   Future<void> _handlePurchase() async {
+    final selectedPackage = _vipPackages[_selectedIndex];
+    final isFirstTimePackage = selectedPackage['isFirstTime'] as bool;
+    
+    // 🚫 检查首充拦截
+    if (isFirstTimePackage && _hasCompletedFirstPurchase) {
+      _showFirstPurchaseCompletedDialog();
+      return;
+    }
+    
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final selectedPackage = _vipPackages[_selectedIndex];
-      final success = await InAppPurchaseService.purchaseProduct(selectedPackage['productId']);
+      final success = await NativePurchaseService.purchaseProduct(selectedPackage['productId']);
       
-      if (success && mounted) {
-        // 购买请求发起成功，实际结果通过Stream回调处理
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('正在处理VIP开通请求...')),
-        );
-        // 不立即关闭页面，等待购买完成通知
-      } else if (mounted) {
+      if (!success && mounted) {
         // 购买请求失败
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('开通请求失败，请重试')),
@@ -425,5 +536,42 @@ class _VipRechargeScreenState extends State<VipRechargeScreen> {
         });
       }
     }
+  }
+
+  /// 显示首充已完成提示对话框
+  void _showFirstPurchaseCompletedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('温馨提示'),
+          content: const Text('您已经享受过首充特惠，请选择其他套餐。'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 自动选择月会员套餐（非首充）
+                setState(() {
+                  _selectedIndex = 1; // 选择 com.yeliao.shanliana1 月会员
+                });
+              },
+              child: const Text(
+                '选择月会员',
+                style: TextStyle(color: Color(0xFFFFE44D)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                '知道了',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 } 

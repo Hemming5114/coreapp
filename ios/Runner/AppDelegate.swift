@@ -6,6 +6,8 @@ import Photos
 @objc class AppDelegate: FlutterAppDelegate {
   private var photosChannel: FlutterMethodChannel?
   private var keychainChannel: FlutterMethodChannel?
+  private var purchaseChannel: FlutterMethodChannel?
+  private let purchaseManager = FlutterPurchaseManager.shared
   
   override func application(
     _ application: UIApplication,
@@ -25,6 +27,15 @@ import Photos
     photosChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
       self?.handlePhotosMethodCall(call: call, result: result)
     }
+    
+    // Native Purchase channel
+    purchaseChannel = FlutterMethodChannel(name: "native_purchase_channel", binaryMessenger: controller.binaryMessenger)
+    purchaseChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self?.handlePurchaseMethodCall(call: call, result: result)
+    }
+    
+    // Set purchase manager delegate
+    purchaseManager.delegate = self
     
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -232,6 +243,108 @@ import Photos
       }
     } else {
       result(false)
+    }
+  }
+  
+  // MARK: - Purchase Methods
+  private func handlePurchaseMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "canMakePayments":
+      let canMake = purchaseManager.canMakePayments()
+      result(canMake)
+      
+    case "requestProductInfo":
+      guard let args = call.arguments as? [String: Any],
+            let productIds = args["productIds"] as? [String] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for requestProductInfo", details: nil))
+        return
+      }
+      
+      // 目前只处理第一个产品ID，后续可以扩展支持批量
+      if let firstProductId = productIds.first {
+        purchaseManager.requestProductInformation(productId: firstProductId) { success, errorMessage in
+          if success {
+            result([["productId": firstProductId, "success": true]])
+          } else {
+            result(FlutterError(code: "PRODUCT_INFO_FAILED", message: errorMessage ?? "Failed to get product info", details: nil))
+          }
+        }
+      } else {
+        result([])
+      }
+      
+    case "purchaseProduct":
+      guard let args = call.arguments as? [String: Any],
+            let productId = args["productId"] as? String,
+            let isConsumable = args["isConsumable"] as? Bool else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for purchaseProduct", details: nil))
+        return
+      }
+      
+      purchaseManager.startPurchaseFlow(productId: productId, isConsumable: isConsumable) { success, errorMessage in
+        if success {
+          result(true)
+        } else {
+          result(FlutterError(code: "PURCHASE_FAILED", message: errorMessage ?? "Purchase failed", details: nil))
+        }
+      }
+      
+    case "finishTransaction":
+      guard let args = call.arguments as? [String: Any],
+            let transactionId = args["transactionId"] as? String else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for finishTransaction", details: nil))
+        return
+      }
+      
+      purchaseManager.finishTransactionWithId(transactionId)
+      result(true)
+      
+    case "restorePurchases":
+      purchaseManager.restoreCompletedTransactions()
+      result(true)
+      
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+}
+
+// MARK: - PurchaseManagerDelegate
+extension AppDelegate: PurchaseManagerDelegate {
+  
+  func onProductsReceived(_ products: [[String: Any]]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onProductsReceived", arguments: products)
+    }
+  }
+  
+  func onPurchaseUpdated(_ data: [String: Any]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onPurchaseUpdated", arguments: data)
+    }
+  }
+  
+  func onPurchaseCompleted(_ data: [String: Any]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onPurchaseCompleted", arguments: data)
+    }
+  }
+  
+  func onPurchaseFailed(_ data: [String: Any]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onPurchaseFailed", arguments: data)
+    }
+  }
+  
+  func onPurchaseRestored(_ data: [String: Any]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onPurchaseRestored", arguments: data)
+    }
+  }
+  
+  func onPurchaseDeferred(_ data: [String: Any]) {
+    DispatchQueue.main.async { [weak self] in
+      self?.purchaseChannel?.invokeMethod("onPurchaseDeferred", arguments: data)
     }
   }
 }

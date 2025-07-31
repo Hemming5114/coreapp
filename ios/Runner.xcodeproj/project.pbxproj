@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,7 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		AA5E03392E3B1D1A0063C3DA /* FlutterPurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5E03382E3B1D1A0063C3DA /* FlutterPurchaseManager.swift */; };
 		AABBC1DE2E386DC5001F51C6 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABBC1DD2E386DC5001F51C6 /* StoreKit.framework */; };
 		AABBC1E02E386E1A001F51C6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AABBC1DF2E386E1A001F51C6 /* PrivacyInfo.xcprivacy */; };
 		AABBC1E22E3870C1001F51C6 /* UIDevice+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABBC1E12E3870C1001F51C6 /* UIDevice+Ext.swift */; };
@@ -49,6 +50,7 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A8406FA911815F81C1DDCE2F /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		AA5E03382E3B1D1A0063C3DA /* FlutterPurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlutterPurchaseManager.swift; sourceTree = "<group>"; };
 		AAA598112E2F3F050007CF45 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		AAA598122E2F3F050007CF45 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		AABBC1DC2E386DB7001F51C6 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+				AA5E03382E3B1D1A0063C3DA /* FlutterPurchaseManager.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				AABBC1DF2E386E1A001F51C6 /* PrivacyInfo.xcprivacy */,
 				AABBC1E12E3870C1001F51C6 /* UIDevice+Ext.swift */,
@@ -301,6 +304,7 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				AABBC1E22E3870C1001F51C6 /* UIDevice+Ext.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				AA5E03392E3B1D1A0063C3DA /* FlutterPurchaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,7 +396,7 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 6VFR63B9QM;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = N3YK37UY32;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "秒遇";
@@ -402,10 +406,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ios.sweete.happy;
+				PRODUCT_BUNDLE_IDENTIFIER = ios.milian20.jiaoyouba;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = sweete_dev_20250507;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = dev_milian20_20250522;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -541,7 +545,7 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 6VFR63B9QM;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = N3YK37UY32;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "秒遇";
@@ -551,10 +555,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ios.sweete.happy;
+				PRODUCT_BUNDLE_IDENTIFIER = ios.milian20.jiaoyouba;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = sweete_dev_20250507;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = dev_milian20_20250522;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -578,7 +582,7 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 6VFR63B9QM;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = N3YK37UY32;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "秒遇";
@@ -588,10 +592,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ios.sweete.happy;
+				PRODUCT_BUNDLE_IDENTIFIER = ios.milian20.jiaoyouba;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = sweete_dev_20250507;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = dev_milian20_20250522;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

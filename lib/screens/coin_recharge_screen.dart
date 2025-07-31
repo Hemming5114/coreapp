@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/in_app_purchase_service.dart';
+import '../services/native_purchase_service.dart';
+import 'dart:async';
 
 class CoinRechargeScreen extends StatefulWidget {
   final int currentCoins;
@@ -18,10 +19,12 @@ class CoinRechargeScreen extends StatefulWidget {
 class _CoinRechargeScreenState extends State<CoinRechargeScreen> {
   int _selectedIndex = 0;
   bool _isLoading = false;
+  late int _displayCoins; // 用于显示的金币数量
+  StreamSubscription<PurchaseEvent>? _purchaseSubscription;
 
   final List<Map<String, dynamic>> _coinPackages = [
     {
-      'productId': 'com.yeliao.shanliana60',
+      'productId': '6_ml_coin',
       'coins': 60,
       'price': 6,
     },
@@ -51,6 +54,81 @@ class _CoinRechargeScreenState extends State<CoinRechargeScreen> {
       'price': 298,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _displayCoins = widget.currentCoins;
+    _initializeAndListenToPurchaseEvents();
+  }
+
+  @override
+  void dispose() {
+    _purchaseSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// 初始化并监听购买事件
+  void _initializeAndListenToPurchaseEvents() async {
+    // 初始化原生内购服务
+    await NativePurchaseService.initialize();
+    
+    _purchaseSubscription = NativePurchaseService.purchaseEventStream.listen((event) {
+      if (!mounted) return;
+      
+      // 只处理金币产品的购买事件
+      final coinProductIds = _coinPackages.map((package) => package['productId'] as String).toSet();
+      if (!coinProductIds.contains(event.productId)) {
+        return; // 不是金币产品，忽略此事件
+      }
+      
+      switch (event.result) {
+        case PurchaseResult.success:
+          if (event.updatedUserData != null) {
+            setState(() {
+              _displayCoins = event.updatedUserData!.coins;
+              _isLoading = false;
+            });
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(event.isRestored ? '金币权益已恢复！' : '金币充值成功！'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            
+            // 调用成功回调
+            widget.onRechargeSuccess();
+          }
+          break;
+          
+        case PurchaseResult.error:
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('充值失败：${event.errorMessage ?? "未知错误"}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          break;
+          
+        case PurchaseResult.canceled:
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('充值已取消')),
+          );
+          break;
+          
+        case PurchaseResult.pending:
+          // 保持loading状态
+          break;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +190,7 @@ class _CoinRechargeScreenState extends State<CoinRechargeScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${widget.currentCoins}',
+                      '$_displayCoins',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -270,15 +348,9 @@ class _CoinRechargeScreenState extends State<CoinRechargeScreen> {
 
     try {
       final selectedPackage = _coinPackages[_selectedIndex];
-      final success = await InAppPurchaseService.purchaseProduct(selectedPackage['productId']);
+      final success = await NativePurchaseService.purchaseProduct(selectedPackage['productId']);
       
-      if (success && mounted) {
-        // 购买请求发起成功，实际结果通过Stream回调处理
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('正在处理购买请求...')),
-        );
-        // 不立即关闭页面，等待购买完成通知
-      } else if (mounted) {
+      if (!success && mounted) {
         // 购买请求失败
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('购买请求失败，请重试')),
