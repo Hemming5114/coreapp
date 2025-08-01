@@ -121,6 +121,58 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 添加空列表检查
+    if (widget.images.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 顶部返回按钮
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              // 错误提示
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white54,
+                        size: 64,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        '没有可显示的图片',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -130,16 +182,22 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             scrollPhysics: const BouncingScrollPhysics(),
             builder: (BuildContext context, int index) {
               final imagePath = '${widget.imageBasePath}${widget.images[index]}';
+              debugPrint('Loading image: $imagePath');
+              
               return PhotoViewGalleryPageOptions(
                 imageProvider: AssetImage(imagePath),
                 initialScale: PhotoViewComputedScale.contained,
-                minScale: PhotoViewComputedScale.contained * 0.8,
-                maxScale: PhotoViewComputedScale.covered * 3.0,
+                heroAttributes: PhotoViewHeroAttributes(tag: "image_$index"),
                 onTapUp: (context, details, controllerValue) {
-                  _toggleUI();
+                  if (mounted) {
+                    _toggleUI();
+                  }
                 },
                 errorBuilder: (context, error, stackTrace) {
+                  debugPrint('Image load error: $error');
                   return Container(
+                    width: double.infinity,
+                    height: double.infinity,
                     color: Colors.black,
                     child: const Center(
                       child: Column(
@@ -164,6 +222,8 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             },
             itemCount: widget.images.length,
             loadingBuilder: (context, event) => Container(
+              width: double.infinity,
+              height: double.infinity,
               color: Colors.black,
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.white),
@@ -172,9 +232,11 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             backgroundDecoration: const BoxDecoration(color: Colors.black),
             pageController: _pageController,
             onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
+              if (mounted) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              }
             },
           ),
           
@@ -246,13 +308,13 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
           
           // 底部指示器（仅在多张图片时显示）
           if (widget.images.length > 1)
-            AnimatedOpacity(
-              opacity: _isVisible ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: Positioned(
-                bottom: 50,
-                left: 0,
-                right: 0,
+            Positioned(
+              bottom: 50,
+              left: 0,
+              right: 0,
+              child: AnimatedOpacity(
+                opacity: _isVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(

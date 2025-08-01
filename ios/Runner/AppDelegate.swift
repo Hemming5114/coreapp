@@ -7,6 +7,7 @@ import Photos
   private var photosChannel: FlutterMethodChannel?
   private var keychainChannel: FlutterMethodChannel?
   private var purchaseChannel: FlutterMethodChannel?
+  private var idfaChannel: FlutterMethodChannel?
   private let purchaseManager = FlutterPurchaseManager.shared
   
   override func application(
@@ -32,6 +33,12 @@ import Photos
     purchaseChannel = FlutterMethodChannel(name: "native_purchase_channel", binaryMessenger: controller.binaryMessenger)
     purchaseChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
       self?.handlePurchaseMethodCall(call: call, result: result)
+    }
+    
+    // IDFA service channel
+    idfaChannel = FlutterMethodChannel(name: "idfa_service", binaryMessenger: controller.binaryMessenger)
+    idfaChannel?.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self?.handleIDFAMethodCall(call: call, result: result)
     }
     
     // Set purchase manager delegate
@@ -243,6 +250,24 @@ import Photos
       }
     } else {
       result(false)
+    }
+  }
+  
+  // MARK: - IDFA Methods
+  private func handleIDFAMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "getDeviceIdentifier":
+      UIDevice.getDeviceIdentifier { idfa in
+        result(idfa)
+      }
+    case "getAdvertisingId":
+      let advertisingId = UIDevice.getAdvertisingId()
+      result(advertisingId)
+    case "getDeviceType":
+      let deviceType = UIDevice.getDeviceType()
+      result(deviceType)
+    default:
+      result(FlutterMethodNotImplemented)
     }
   }
   

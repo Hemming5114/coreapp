@@ -156,6 +156,20 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> with TickerProvider
                   itemBuilder: (context, idx) {
                     return GestureDetector(
                       onTap: () {
+                        // 添加验证和调试信息
+                        debugPrint('Opening ImageViewerScreen with ${images.length} images');
+                        debugPrint('Images: $images');
+                        
+                        if (images.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('没有可查看的图片'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+                        
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -172,6 +186,31 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> with TickerProvider
                         width: screenWidth,
                         height: imageHeight,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('Feed image load error: $error');
+                          return Container(
+                            width: screenWidth,
+                            height: imageHeight,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                    size: 48,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    '图片加载失败',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
